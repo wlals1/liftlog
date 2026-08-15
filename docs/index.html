@@ -176,6 +176,25 @@
             <div onClick="{{ finish }}" style="height:50px;border-radius:14px;background:#FF5A2E;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14.5px;font-weight:600;cursor:pointer">
               <span>{{ finishLabel }}</span>
             </div>
+            <div style="background:#fff;border:1px solid #EDE8DF;border-radius:16px;padding:14px">
+              <div onClick="{{ ghToggle }}" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;font-weight:600">{{ ghHead }}</div>
+                  <div style="margin-top:3px;font-size:11px;color:#8E887E;line-height:1.5">{{ ghSub }}</div>
+                </div>
+                <span style="flex-shrink:0;font-size:12px;color:#A39C91">⌄</span>
+              </div>
+              <sc-if value="{{ ghOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px">
+                  <input value="{{ ghRepo }}" onChange="{{ onGhRepo }}" placeholder="계정/저장소 (예: wlals1/liftlog-data)" style="height:40px;border:1px solid #E9E4DB;border-radius:11px;background:#FAF8F5;padding:0 11px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#1A1713;outline:none;width:100%" />
+                  <input value="{{ ghPath }}" onChange="{{ onGhPath }}" placeholder="파일명 (liftlog.json)" style="height:40px;border:1px solid #E9E4DB;border-radius:11px;background:#FAF8F5;padding:0 11px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#1A1713;outline:none;width:100%" />
+                  <input value="{{ ghToken }}" onChange="{{ onGhToken }}" type="password" placeholder="github_pat_... (Contents 읽기·쓰기)" style="height:40px;border:1px solid #E9E4DB;border-radius:11px;background:#FAF8F5;padding:0 11px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#1A1713;outline:none;width:100%" />
+                  <div onClick="{{ ghNow }}" style="margin-top:2px;height:42px;border-radius:12px;background:#1A1713;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:600;cursor:pointer">{{ ghBtnLabel }}</div>
+                  <div style="margin-top:4px;font-size:11px;color:#A39C91;line-height:1.65;text-wrap:pretty">기록이 이 저장소의 json 파일로 올라가고, 다른 기기에서 열면 합쳐집니다. 앱을 켤 때와 운동을 저장할 때 자동으로 동기화돼요. 기록이 공개되지 않게 <strong style="font-weight:600">비공개(private) 저장소</strong>를 따로 만들어 쓰세요.</div>
+                </div>
+              </sc-if>
+            </div>
+
             <div onClick="{{ resetAll }}" style="height:34px;display:flex;align-items:center;justify-content:center;font-size:11.5px;color:#A39C91;cursor:pointer">{{ resetLabel }}</div>
           </div>
         </sc-if>
@@ -311,6 +330,9 @@
 
                 <div style="background:#fff;border:1px solid #EDE8DF;border-radius:16px;padding:14px">
                   <div style="font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#A39C91">부위별 세트 배분</div>
+                  <sc-if value="{{ noWeek }}" hint-placeholder-val="{{ false }}">
+                    <div style="margin-top:9px;font-size:12px;color:#A39C91;line-height:1.6">이번 주 기록이 쌓이면 부위별로 나눠 보여줍니다.</div>
+                  </sc-if>
                   <div style="margin-top:11px;display:flex;flex-direction:column;gap:9px">
                     <sc-for list="{{ groupBars }}" as="g" hint-placeholder-count="5">
                       <div>
@@ -411,7 +433,7 @@
                 <div style="background:#fff;border:1px solid #EDE8DF;border-radius:16px;padding:14px">
                   <div style="display:flex;justify-content:space-between;align-items:baseline">
                     <div style="white-space:nowrap;font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#A39C91">주요 종목 무게 추이</div>
-                    <div style="white-space:nowrap;font-size:10.5px;color:#8E887E">26주 · 종목별 스케일</div>
+                    <div style="white-space:nowrap;font-size:10.5px;color:#8E887E">종목별 스케일</div>
                   </div>
                   <sc-if value="{{ noLifts }}" hint-placeholder-val="{{ false }}">
                     <div style="margin-top:9px;font-size:12px;color:#A39C91;line-height:1.6">{{ emptyMonth }}</div>
@@ -750,6 +772,7 @@ class Component extends DCLogic {
       progIdx: Math.max(0, this.PROG.findIndex(p => p.name === this.d.today.prog.name)),
       sheet: null, bump: true, saved: {}, apiKey: '', keyInput: '', keyOpen: false,
       body: [], cardio: [], bodyForm: { kg: '', sm: '', fat: '' }, cardioForm: { type: '러닝', mins: '', km: '', hr: '' },
+      gh: { token: '', repo: 'wlals1/liftlog-data', path: 'liftlog.json' }, ghOpen: false, ghBusy: false, ghStatus: '', ghLast: '',
       session: this.d.today.ex,
       rest: 0, restOn: false, elapsed: 0,
       report: null, aiLoading: false, aiError: null,
@@ -926,9 +949,9 @@ class Component extends DCLogic {
   // ── behaviour ─────────────────────────────────────────
   store(patch) {
     try {
-      const s = Object.assign({ v: 1, progIdx: this.state.progIdx, session: this.state.session, bump: this.state.bump,
+      const s = Object.assign({ v: 2, progIdx: this.state.progIdx, session: this.state.session, bump: this.state.bump,
         elapsed: this.state.elapsed, finished: this.state.finished, saved: this.state.saved, apiKey: this.state.apiKey,
-        body: this.state.body, cardio: this.state.cardio }, patch || {});
+        body: this.state.body, cardio: this.state.cardio, gh: this.state.gh, ghLast: this.state.ghLast }, patch || {});
       localStorage.setItem('liftlog.v1', JSON.stringify(s));
     } catch (e) {}
   }
@@ -938,22 +961,28 @@ class Component extends DCLogic {
       if (raw) {
         const p = JSON.parse(raw) || {};
         const next = {};
+        const stale = !((p.v || 1) >= 2) && !Object.keys(p.saved || {}).length;
         if (typeof p.progIdx === 'number' && this.PROG[p.progIdx]) next.progIdx = p.progIdx;
-        if (Array.isArray(p.session) && p.session.length && p.session[0].sets) next.session = p.session;
+        if (!stale && Array.isArray(p.session) && p.session.length && p.session[0].sets) next.session = p.session;
+        if (stale) { next.session = this.PROG[next.progIdx || 0].ex.map(([k, ns]) => this.makeEx(k, ns, false)); next.elapsed = 0; }
         if (typeof p.bump === 'boolean') next.bump = p.bump;
-        if (typeof p.elapsed === 'number') next.elapsed = p.elapsed;
+        if (!stale && typeof p.elapsed === 'number') next.elapsed = p.elapsed;
         if (typeof p.finished === 'boolean') next.finished = p.finished;
         if (p.saved && typeof p.saved === 'object') next.saved = p.saved;
         if (typeof p.apiKey === 'string') next.apiKey = p.apiKey;
         if (Array.isArray(p.body)) next.body = p.body;
         if (Array.isArray(p.cardio)) next.cardio = p.cardio;
-        if (Object.keys(next).length) this.setState(next);
+        if (p.gh && typeof p.gh === 'object') next.gh = Object.assign({ token: '', repo: 'wlals1/liftlog-data', path: 'liftlog.json' }, p.gh);
+        if (typeof p.ghLast === 'string') next.ghLast = p.ghLast;
+        if (Object.keys(next).length) this.setState(next, () => { if ((this.state.gh.token || '').trim()) this.ghSync(true); });
+        else if ((this.state.gh.token || '').trim()) this.ghSync(true);
       }
     } catch (e) {}
     this.tick = 0;
     this.t = setInterval(() => {
       this.setState(s => {
-        const n = { elapsed: s.elapsed + 1 };
+        const started = s.session.some(x => x.sets.some(t => t.done));
+        const n = { elapsed: started && !s.finished ? s.elapsed + 1 : s.elapsed };
         if (s.restOn) { n.rest = s.rest - 1; if (n.rest <= 0) { n.restOn = false; n.rest = 0; } }
         return n;
       });
@@ -1012,6 +1041,40 @@ class Component extends DCLogic {
       return { editRow: ei + '-' + j, session: s.session.map((x, i) => i !== ei ? x : Object.assign({}, x, { sets: arr })) };
     });
   }
+  b64enc(str) { const b = new TextEncoder().encode(str); let s = ''; b.forEach(x => { s += String.fromCharCode(x); }); return btoa(s); }
+  b64dec(b64) { const bin = atob(String(b64).replace(/\s/g, '')); return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))); }
+  ghHeaders() { return { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + (this.state.gh.token || '').trim(), 'X-GitHub-Api-Version': '2022-11-28' }; }
+  ghUrl() { const g = this.state.gh; return 'https://api.github.com/repos/' + g.repo.trim() + '/contents/' + g.path.trim().replace(/^\//, ''); }
+  mergeData(a, b) {
+    const saved = {};
+    Object.keys(a.saved || {}).forEach(k => { saved[k] = a.saved[k]; });
+    Object.keys(b.saved || {}).forEach(k => { const x = saved[k], y = b.saved[k]; saved[k] = !x || (y.nsets || 0) >= (x.nsets || 0) ? y : x; });
+    const uniq = (x, y) => { const m = {}; [].concat(x || [], y || []).forEach(i => { if (i && i.d) m[i.d] = i; }); return Object.keys(m).sort().map(k => m[k]); };
+    return { saved: saved, body: uniq(a.body, b.body), cardio: uniq(a.cardio, b.cardio) };
+  }
+  async ghSync(silent) {
+    const g = this.state.gh || {};
+    if (!(g.token || '').trim() || !(g.repo || '').trim()) { if (!silent) this.setState({ ghOpen: true, ghStatus: '토큰과 저장소를 먼저 입력하세요' }); return; }
+    if (this.state.ghBusy) return;
+    this.setState({ ghBusy: true, ghStatus: '동기화 중…' });
+    try {
+      let remote = null, sha = null;
+      const r = await fetch(this.ghUrl(), { headers: this.ghHeaders(), cache: 'no-store' });
+      if (r.ok) { const j = await r.json(); sha = j.sha; try { remote = JSON.parse(this.b64dec(j.content)); } catch (e) { remote = null; } }
+      else if (r.status !== 404) throw new Error('읽기 ' + r.status + (r.status === 401 ? ' · 토큰 확인' : r.status === 403 ? ' · 권한 확인' : ''));
+      const local = { saved: this.state.saved, body: this.state.body, cardio: this.state.cardio };
+      const merged = remote ? this.mergeData(remote, local) : local;
+      const payload = JSON.stringify(Object.assign({ v: 2, updated: new Date().toISOString() }, merged), null, 1);
+      const put = await fetch(this.ghUrl(), { method: 'PUT', headers: Object.assign({ 'content-type': 'application/json' }, this.ghHeaders()),
+        body: JSON.stringify({ message: 'liftlog ' + new Date().toISOString().slice(0, 16).replace('T', ' '), content: this.b64enc(payload), sha: sha || undefined }) });
+      if (!put.ok) throw new Error('쓰기 ' + put.status + (put.status === 404 ? ' · 저장소 이름 확인' : put.status === 403 ? ' · 토큰 쓰기 권한 확인' : ''));
+      const t = new Date().toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      this.setState({ saved: merged.saved, body: merged.body, cardio: merged.cardio, ghBusy: false, ghLast: t, ghStatus: '동기화 완료 · ' + t }, () => this.store());
+    } catch (e) {
+      this.setState({ ghBusy: false, ghStatus: '실패: ' + (e.message || '네트워크 오류') });
+    }
+  }
+  setGh(k, v) { this.setState(s => ({ gh: Object.assign({}, s.gh, { [k]: v }) }), () => this.store()); }
   setBodyForm(k, v) { this.setState(s => ({ bodyForm: Object.assign({}, s.bodyForm, { [k]: v }) })); }
   setCardioForm(k, v) { this.setState(s => ({ cardioForm: Object.assign({}, s.cardioForm, { [k]: v }) })); }
   addBody() {
@@ -1131,7 +1194,7 @@ class Component extends DCLogic {
   renderVals() {
     const S = this.state, d = this.d, A = '#FF5A2E';
     const prog = this.PROG[S.progIdx];
-    const tabDefs = [['today', '오늘', '세트별 기록'], ['cardio', '유산소', '건강 앱 연동'], ['analysis', '분석', '일 · 주 · 월'], ['body', '몸', '체중 · 인바디'], ['ai', 'AI', '클로드 분석']];
+    const tabDefs = [['today', '오늘', '세트별 기록'], ['cardio', '유산소', '직접 입력'], ['analysis', '분석', '일 · 주 · 월'], ['body', '몸', '체중 · 인바디'], ['ai', 'AI', '클로드 분석']];
     const tabs = tabDefs.map(([k, label]) => ({
       label: label, go: () => this.setState({ tab: k, sheet: null }),
       style: { flex: 1, height: 46, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 12, cursor: 'pointer', background: S.tab === k ? '#FFF1EC' : 'transparent' },
@@ -1325,9 +1388,19 @@ class Component extends DCLogic {
           nsets: ex.reduce((a, x) => a + x.sets.length, 0), mins: Math.max(1, Math.round(S.elapsed / 60)),
           at: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) };
         const saved = Object.assign({}, S.saved); saved[md] = entry;
-        this.setState({ finished: true, restOn: false, saved: saved }, () => this.store());
+        this.setState({ finished: true, restOn: false, saved: saved }, () => { this.store(); if ((this.state.gh.token || '').trim()) this.ghSync(true); });
       },
       restOn: S.restOn, restLabel: this.mmss(Math.max(0, S.rest)), skipRest: () => this.setState({ restOn: false, rest: 0 }),
+      ghOpen: S.ghOpen, ghBusy: S.ghBusy,
+      ghToggle: () => this.setState(s => ({ ghOpen: !s.ghOpen })),
+      ghHead: (S.gh.token || '').trim() ? '깃허브 동기화 켜짐' : '깃허브 동기화 설정',
+      ghSub: S.ghStatus || (S.ghLast ? '마지막 동기화 · ' + S.ghLast : '노트북·아이폰에서 같은 기록 보기'),
+      ghRepo: S.gh.repo, ghPath: S.gh.path, ghToken: S.gh.token,
+      onGhRepo: e => this.setGh('repo', e.target.value),
+      onGhPath: e => this.setGh('path', e.target.value),
+      onGhToken: e => this.setGh('token', e.target.value),
+      ghNow: () => this.ghSync(false),
+      ghBtnLabel: S.ghBusy ? '동기화 중…' : '지금 동기화',
       resetLabel: S.confirmReset ? '한 번 더 누르면 모두 삭제됩니다' : '저장된 기록 전체 초기화',
       resetAll: () => {
         if (!S.confirmReset) { this.setState({ confirmReset: true }); setTimeout(() => this.setState({ confirmReset: false }), 4000); return; }
