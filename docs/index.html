@@ -176,24 +176,26 @@
             <div onClick="{{ finish }}" style="height:50px;border-radius:14px;background:#FF5A2E;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14.5px;font-weight:600;cursor:pointer">
               <span>{{ finishLabel }}</span>
             </div>
+            <div onClick="{{ resetAll }}" style="height:34px;display:flex;align-items:center;justify-content:center;font-size:11.5px;color:#A39C91;cursor:pointer">{{ resetLabel }}</div>
           </div>
         </sc-if>
 
         <sc-if value="{{ isCardio }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;flex-direction:column;gap:10px">
             <div style="background:#fff;border:1px solid #EDE8DF;border-radius:16px;padding:14px">
-              <div style="display:flex;align-items:center;gap:8px">
-                <div style="width:7px;height:7px;border-radius:4px;background:#FF5A2E"></div>
-                <span style="flex:1;font-size:13.5px;font-weight:600">iOS 건강 앱 연동됨</span>
-                <span onClick="{{ sync }}" style="white-space:nowrap;font-size:11px;font-weight:600;color:#FF5A2E;border:1px solid #F0C6B4;border-radius:999px;padding:5px 10px;cursor:pointer">지금 동기화</span>
-              </div>
-              <div style="margin-top:7px;font-size:11.5px;color:#8E887E">마지막 동기화 · {{ cSynced }}</div>
-              <div style="margin-top:11px;display:flex;flex-wrap:wrap;gap:5px">
-                <sc-for list="{{ cSources }}" as="s" hint-placeholder-count="6">
-                  <span style="white-space:nowrap;font-size:10.5px;color:#6B655C;background:#F4F1EA;border-radius:6px;padding:4px 8px">{{ s }}</span>
+              <div style="font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#A39C91">유산소 기록 추가</div>
+              <div style="margin-top:10px;display:flex;gap:5px">
+                <sc-for list="{{ cardioTypes }}" as="t" hint-placeholder-count="3">
+                  <div onClick="{{ t.go }}" style="{{ t.style }}">{{ t.label }}</div>
                 </sc-for>
               </div>
-              <div style="margin-top:11px;padding-top:11px;border-top:1px solid #F1EDE5;font-size:11px;color:#A39C91;line-height:1.6">유산소는 웨이트 볼륨과 따로 집계됩니다. 건강 앱에서 가져온 기록은 수정하지 않고 그대로 보관해요.</div>
+              <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+                <input value="{{ cMinsIn }}" onChange="{{ onCMins }}" inputMode="decimal" placeholder="분" style="height:40px;border:1px solid #E9E4DB;border-radius:11px;background:#FAF8F5;padding:0 11px;font-family:'IBM Plex Mono',monospace;font-size:14px;color:#1A1713;outline:none;width:100%" />
+                <input value="{{ cKmIn }}" onChange="{{ onCKm }}" inputMode="decimal" placeholder="km" style="height:40px;border:1px solid #E9E4DB;border-radius:11px;background:#FAF8F5;padding:0 11px;font-family:'IBM Plex Mono',monospace;font-size:14px;color:#1A1713;outline:none;width:100%" />
+                <input value="{{ cHrIn }}" onChange="{{ onCHr }}" inputMode="decimal" placeholder="bpm" style="height:40px;border:1px solid #E9E4DB;border-radius:11px;background:#FAF8F5;padding:0 11px;font-family:'IBM Plex Mono',monospace;font-size:14px;color:#1A1713;outline:none;width:100%" />
+              </div>
+              <div onClick="{{ addCardio }}" style="margin-top:8px;height:42px;border-radius:12px;background:#FF5A2E;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:600;cursor:pointer">기록 추가</div>
+              <div style="margin-top:11px;padding-top:11px;border-top:1px solid #F1EDE5;font-size:11px;color:#A39C91;line-height:1.65;text-wrap:pretty">아이폰 건강 앱은 웹앱에서 직접 읽을 수 없습니다(애플이 웹에 HealthKit을 열어주지 않음). 워치·건강 앱 화면을 보고 시간·거리·평균 심박만 옮겨 적으면 됩니다. 유산소는 웨이트 볼륨과 따로 집계돼요.</div>
             </div>
 
             <div style="background:#fff;border:1px solid #EDE8DF;border-radius:16px;padding:14px">
@@ -227,39 +229,27 @@
             </div>
 
             <div style="background:#fff;border:1px solid #EDE8DF;border-radius:16px;padding:14px">
-              <div style="font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#A39C91">심박존 · 이번 주</div>
-              <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
-                <sc-for list="{{ cZones }}" as="z" hint-placeholder-count="5">
-                  <div style="display:flex;align-items:center;gap:9px">
-                    <span style="width:20px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#8E887E">{{ z.z }}</span>
-                    <span style="width:42px;font-size:11.5px;color:#4A453D">{{ z.name }}</span>
-                    <svg width="190" height="8" viewBox="0 0 190 8" style="display:block">
-                      <rect x="0" y="1" width="190" height="6" rx="3" fill="#F4F1EA"></rect>
-                      <rect x="0" y="0" width="{{ z.w }}" height="8" rx="4" fill="{{ z.fill }}"></rect>
-                    </svg>
-                    <span style="flex:1;text-align:right;white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#6B655C">{{ z.mins }}</span>
-                  </div>
-                </sc-for>
-              </div>
-            </div>
-
-            <div style="background:#fff;border:1px solid #EDE8DF;border-radius:16px;padding:14px">
               <div style="font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#A39C91">최근 세션</div>
-              <div style="margin-top:6px;display:flex;flex-direction:column">
-                <sc-for list="{{ cSessions }}" as="s" hint-placeholder-count="7">
-                  <div style="padding:11px 0;border-bottom:1px solid #F4F1EA">
-                    <div style="display:flex;align-items:center;gap:7px">
-                      <span style="font-size:13.5px;font-weight:600">{{ s.type }}</span>
-                      <span style="white-space:nowrap;font-size:9.5px;color:#8E887E;background:#F4F1EA;border-radius:5px;padding:2px 5px">{{ s.src }}</span>
-                      <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600">{{ s.mins }}</span>
+              <sc-if value="{{ hasCardio }}" hint-placeholder-val="{{ true }}">
+                <div style="margin-top:6px;display:flex;flex-direction:column">
+                  <sc-for list="{{ cSessions }}" as="s" hint-placeholder-count="7">
+                    <div style="padding:11px 0;border-bottom:1px solid #F4F1EA">
+                      <div style="display:flex;align-items:center;gap:7px">
+                        <span style="font-size:13.5px;font-weight:600">{{ s.type }}</span>
+                        <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600">{{ s.mins }}</span>
+                        <span onClick="{{ s.del }}" style="width:22px;height:22px;border-radius:7px;background:#F4F1EA;color:#A39C91;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer">✕</span>
+                      </div>
+                      <div style="margin-top:4px;display:flex;justify-content:space-between;gap:8px">
+                        <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8E887E">{{ s.detail }}</span>
+                        <span style="flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#A39C91">{{ s.date }}</span>
+                      </div>
                     </div>
-                    <div style="margin-top:4px;display:flex;justify-content:space-between;gap:8px">
-                      <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8E887E">{{ s.detail }}</span>
-                      <span style="flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#A39C91">{{ s.date }}</span>
-                    </div>
-                  </div>
-                </sc-for>
-              </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ noCardio }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:10px;font-size:12px;color:#A39C91;line-height:1.6">아직 유산소 기록이 없습니다. 위에서 추가하면 여기에 쌓입니다.</div>
+              </sc-if>
             </div>
 
             <div style="background:#fff;border:1px solid #EDE8DF;border-radius:16px;padding:14px">
@@ -271,26 +261,6 @@
                 </sc-for>
                 <sc-for list="{{ cBars }}" as="b" hint-placeholder-count="12">
                   <text x="{{ b.tx }}" y="90" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" fill="#A39C91">{{ b.t }}</text>
-                </sc-for>
-              </svg>
-              <div style="margin-top:12px;padding-top:12px;border-top:1px solid #F1EDE5;display:flex;align-items:flex-end;justify-content:space-between">
-                <div>
-                  <div style="font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#A39C91">추정 VO₂max</div>
-                  <div style="margin-top:5px;display:flex;align-items:baseline;gap:6px">
-                    <span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:600;letter-spacing:-.8px">{{ vo2Now }}</span>
-                    <span style="font-size:11px;color:#8E887E">ml/kg/min</span>
-                    <span style="font-size:11.5px;font-weight:600;color:#FF5A2E">{{ vo2Delta }}</span>
-                  </div>
-                </div>
-                <div style="font-size:10.5px;color:#A39C91">건강 앱 제공</div>
-              </div>
-              <svg width="342" height="94" viewBox="0 0 342 94" style="margin-top:6px;display:block">
-                <polyline points="{{ vo2Pts }}" fill="none" stroke="#FF5A2E" stroke-width="2" stroke-linejoin="round"></polyline>
-                <sc-for list="{{ vo2Dots }}" as="p" hint-placeholder-count="6">
-                  <circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.r }}" fill="#FF5A2E"></circle>
-                </sc-for>
-                <sc-for list="{{ vo2Ticks }}" as="t" hint-placeholder-count="6">
-                  <text x="{{ t.x }}" y="90" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" fill="#A39C91">{{ t.label }}</text>
                 </sc-for>
               </svg>
             </div>
@@ -360,6 +330,9 @@
 
                 <div style="background:#fff;border:1px solid #EDE8DF;border-radius:16px;padding:14px">
                   <div style="font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#A39C91">이번 주 세션</div>
+                  <sc-if value="{{ noWeek }}" hint-placeholder-val="{{ false }}">
+                    <div style="margin-top:9px;font-size:12px;color:#A39C91;line-height:1.6">{{ emptyWeek }}</div>
+                  </sc-if>
                   <div style="margin-top:8px;display:flex;flex-direction:column">
                     <sc-for list="{{ weekSessions }}" as="s" hint-placeholder-count="4">
                       <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F4F1EA">
@@ -440,6 +413,9 @@
                     <div style="white-space:nowrap;font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#A39C91">주요 종목 무게 추이</div>
                     <div style="white-space:nowrap;font-size:10.5px;color:#8E887E">26주 · 종목별 스케일</div>
                   </div>
+                  <sc-if value="{{ noLifts }}" hint-placeholder-val="{{ false }}">
+                    <div style="margin-top:9px;font-size:12px;color:#A39C91;line-height:1.6">{{ emptyMonth }}</div>
+                  </sc-if>
                   <div style="margin-top:4px;display:flex;flex-direction:column">
                     <sc-for list="{{ liftRows }}" as="l" hint-placeholder-count="3">
                       <div style="padding:11px 0;border-bottom:1px solid #F4F1EA">
@@ -475,6 +451,9 @@
 
                 <div style="background:#fff;border:1px solid #EDE8DF;border-radius:16px;padding:14px">
                   <div style="font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#A39C91">최근 PR</div>
+                  <sc-if value="{{ noPrs }}" hint-placeholder-val="{{ false }}">
+                    <div style="margin-top:9px;font-size:12px;color:#A39C91;line-height:1.6">기록을 저장하면 종목별 최고 무게가 여기에 남습니다.</div>
+                  </sc-if>
                   <div style="margin-top:6px;display:flex;flex-direction:column">
                     <sc-for list="{{ prs }}" as="p" hint-placeholder-count="4">
                       <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F4F1EA">
@@ -502,21 +481,37 @@
                     <span style="font-size:12px;font-weight:600;color:#FF5A2E">{{ wChange }}</span>
                   </div>
                 </div>
-                <div style="text-align:right;font-size:10.5px;color:#8E887E;line-height:1.6">주 1회 측정<br />최근 26주</div>
+                <div style="text-align:right;font-size:10.5px;color:#8E887E;line-height:1.6">측정 {{ ctxInbody }}회</div>
               </div>
-              <svg width="342" height="118" viewBox="0 0 342 118" style="margin-top:10px;display:block">
-                <path d="{{ wArea }}" fill="#FFF1EC"></path>
-                <polyline points="{{ wPts }}" fill="none" stroke="#FF5A2E" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline>
-                <circle cx="{{ wEndX }}" cy="{{ wEndY }}" r="3.5" fill="#FF5A2E"></circle>
-                <text x="0" y="10" font-family="IBM Plex Mono, monospace" font-size="9" fill="#A39C91">{{ wMax }}</text>
-                <text x="0" y="112" font-family="IBM Plex Mono, monospace" font-size="9" fill="#A39C91">{{ wMin }}</text>
-              </svg>
+              <sc-if value="{{ hasWChart }}" hint-placeholder-val="{{ true }}">
+                <svg width="342" height="118" viewBox="0 0 342 118" style="margin-top:10px;display:block">
+                  <path d="{{ wArea }}" fill="#FFF1EC"></path>
+                  <polyline points="{{ wPts }}" fill="none" stroke="#FF5A2E" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline>
+                  <circle cx="{{ wEndX }}" cy="{{ wEndY }}" r="3.5" fill="#FF5A2E"></circle>
+                  <text x="0" y="10" font-family="IBM Plex Mono, monospace" font-size="9" fill="#A39C91">{{ wMax }}</text>
+                  <text x="0" y="112" font-family="IBM Plex Mono, monospace" font-size="9" fill="#A39C91">{{ wMin }}</text>
+                </svg>
+              </sc-if>
+              <sc-if value="{{ noWChart }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:10px;font-size:12px;color:#A39C91;line-height:1.6">{{ bodyEmpty }}</div>
+              </sc-if>
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid #F1EDE5">
+                <div style="font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#A39C91">측정값 입력</div>
+                <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+                  <input value="{{ bodyKg }}" onChange="{{ onBodyKg }}" inputMode="decimal" placeholder="체중 kg" style="height:40px;border:1px solid #E9E4DB;border-radius:11px;background:#FAF8F5;padding:0 10px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:#1A1713;outline:none;width:100%" />
+                  <input value="{{ bodySm }}" onChange="{{ onBodySm }}" inputMode="decimal" placeholder="골격근 kg" style="height:40px;border:1px solid #E9E4DB;border-radius:11px;background:#FAF8F5;padding:0 10px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:#1A1713;outline:none;width:100%" />
+                  <input value="{{ bodyFat }}" onChange="{{ onBodyFat }}" inputMode="decimal" placeholder="체지방 %" style="height:40px;border:1px solid #E9E4DB;border-radius:11px;background:#FAF8F5;padding:0 10px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:#1A1713;outline:none;width:100%" />
+                </div>
+                <div onClick="{{ addBody }}" style="margin-top:8px;height:42px;border-radius:12px;background:#FF5A2E;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:600;cursor:pointer">기록 추가</div>
+                <div style="margin-top:8px;font-size:11px;color:#A39C91;line-height:1.6">체중만 넣어도 됩니다. 인바디 잰 날은 골격근량·체지방률까지 같이 넣으면 아래 추이가 그려집니다.</div>
+              </div>
             </div>
 
+            <sc-if value="{{ hasIb }}" hint-placeholder-val="{{ true }}">
             <div style="background:#fff;border:1px solid #EDE8DF;border-radius:16px;padding:14px">
               <div style="display:flex;justify-content:space-between;align-items:baseline">
                 <div style="font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#A39C91">인바디 · {{ ibDate }}</div>
-                <div style="font-size:10.5px;color:#8E887E">6개월 전 대비</div>
+                <div style="font-size:10.5px;color:#8E887E">첫 측정 대비</div>
               </div>
               <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
                 <sc-for list="{{ ibCards }}" as="c" hint-placeholder-count="3">
@@ -527,6 +522,7 @@
                   </div>
                 </sc-for>
               </div>
+              <sc-if value="{{ hasIbChart }}" hint-placeholder-val="{{ false }}">
               <div style="margin-top:14px;display:flex;gap:12px">
                 <div style="display:flex;align-items:center;gap:5px">
                   <div style="width:9px;height:2px;background:#1A1713"></div>
@@ -549,31 +545,35 @@
                   <text x="{{ t.x }}" y="128" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" fill="#A39C91">{{ t.label }}</text>
                 </sc-for>
               </svg>
+              </sc-if>
               <div style="margin-top:8px;padding-top:11px;border-top:1px solid #F1EDE5;font-size:11.5px;color:#6B655C;line-height:1.6">{{ ibNote }}</div>
             </div>
+            </sc-if>
 
+            <sc-if value="{{ hasBody }}" hint-placeholder-val="{{ true }}">
             <div style="background:#fff;border:1px solid #EDE8DF;border-radius:16px;padding:14px">
               <div style="font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#A39C91">측정 이력</div>
               <div style="margin-top:8px;display:grid;grid-template-columns:52px 1fr 1fr 1fr;gap:6px;font-size:10px;color:#A39C91;padding-bottom:7px;border-bottom:1px solid #EDE8DF">
                 <span>날짜</span><span style="text-align:right">체중</span><span style="text-align:right">골격근</span><span style="text-align:right">체지방률</span>
               </div>
               <sc-for list="{{ ibRows }}" as="r" hint-placeholder-count="7">
-                <div style="display:grid;grid-template-columns:52px 1fr 1fr 1fr;gap:6px;padding:9px 0;border-bottom:1px solid #F4F1EA;font-family:'IBM Plex Mono',monospace;font-size:12px">
+                <div style="display:grid;grid-template-columns:52px 1fr 1fr 1fr 24px;gap:6px;align-items:center;padding:9px 0;border-bottom:1px solid #F4F1EA;font-family:'IBM Plex Mono',monospace;font-size:12px">
                   <span style="color:#8E887E;font-size:11px">{{ r.date }}</span>
                   <span style="text-align:right">{{ r.wt }}</span>
                   <span style="text-align:right">{{ r.sm }}</span>
                   <span style="text-align:right">{{ r.fat }}</span>
+                  <span onClick="{{ r.del }}" style="width:22px;height:22px;border-radius:7px;background:#F4F1EA;color:#A39C91;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer">✕</span>
                 </div>
               </sc-for>
-              <div style="margin-top:12px;height:42px;border:1px dashed #DED7CB;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#8E887E;cursor:pointer">인바디 결과 입력</div>
             </div>
+            </sc-if>
           </div>
         </sc-if>
 
         <sc-if value="{{ isAI }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;flex-direction:column;gap:10px">
             <div style="background:#1A1713;border-radius:16px;padding:16px;color:#F5F2EC">
-              <div style="font-size:12.5px;line-height:1.7;color:#C9C4BA;text-wrap:pretty">최근 4주 기록 · 세션 {{ ctxSessions }}회 · 인바디 {{ ctxInbody }}회를 요약해서 클로드에게 보냅니다.</div>
+              <div style="font-size:12.5px;line-height:1.7;color:#C9C4BA;text-wrap:pretty">저장된 세션 {{ ctxSessions }}회 · 체중·인바디 {{ ctxInbody }}회 · 유산소 기록을 요약해서 클로드에게 보냅니다.</div>
               <div onClick="{{ runAI }}" style="{{ runBtnStyle }}">{{ runLabel }}</div>
               <sc-if value="{{ aiError }}" hint-placeholder-val="{{ false }}">
                 <div style="margin-top:10px;font-size:11.5px;color:#FF9E80">{{ aiError }}</div>
@@ -644,13 +644,6 @@
               </div>
             </div>
 
-            <div style="background:#fff;border:1px solid #EDE8DF;border-radius:16px;padding:14px">
-              <div style="display:flex;justify-content:space-between;align-items:baseline">
-                <div style="font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#A39C91">지난 리포트</div>
-                <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#A39C91">8월 9일</div>
-              </div>
-              <div style="margin-top:9px;font-size:12.5px;line-height:1.75;color:#3A352E;text-wrap:pretty">상체 볼륨은 3주 연속 올라갔는데 하체는 2주째 제자리입니다. 스쿼트를 92.5kg 5×5로 한 단계 내려 리셋하고, 2주간 주당 2.5kg만 올리는 쪽을 권합니다. 골격근량이 늘고 있으니 식사는 유지하세요.</div>
-            </div>
           </div>
         </sc-if>
 
@@ -751,13 +744,14 @@ class Component extends DCLogic {
       { name: '하체 B', sub: '레그프레스 중심 · 햄스트링', ex: [['legpress', 4], ['dbrdl', 3], ['bulgarian', 3], ['pronecurl', 3], ['calf', 3]] }
     ];
     this.DW = ['일', '월', '화', '수', '목', '금', '토'];
-    this.d = this.build();
+    this.d = this.emptyData();
     this.state = {
       tab: 'today', range: 'week', dayOffset: 0,
       progIdx: Math.max(0, this.PROG.findIndex(p => p.name === this.d.today.prog.name)),
       sheet: null, bump: true, saved: {}, apiKey: '', keyInput: '', keyOpen: false,
+      body: [], cardio: [], bodyForm: { kg: '', sm: '', fat: '' }, cardioForm: { type: '러닝', mins: '', km: '', hr: '' },
       session: this.d.today.ex,
-      rest: 0, restOn: false, elapsed: 51 * 60,
+      rest: 0, restOn: false, elapsed: 0,
       report: null, aiLoading: false, aiError: null,
       chat: [], chatInput: '', chatLoading: false, finished: false
     };
@@ -933,7 +927,8 @@ class Component extends DCLogic {
   store(patch) {
     try {
       const s = Object.assign({ v: 1, progIdx: this.state.progIdx, session: this.state.session, bump: this.state.bump,
-        elapsed: this.state.elapsed, finished: this.state.finished, saved: this.state.saved, apiKey: this.state.apiKey }, patch || {});
+        elapsed: this.state.elapsed, finished: this.state.finished, saved: this.state.saved, apiKey: this.state.apiKey,
+        body: this.state.body, cardio: this.state.cardio }, patch || {});
       localStorage.setItem('liftlog.v1', JSON.stringify(s));
     } catch (e) {}
   }
@@ -950,6 +945,8 @@ class Component extends DCLogic {
         if (typeof p.finished === 'boolean') next.finished = p.finished;
         if (p.saved && typeof p.saved === 'object') next.saved = p.saved;
         if (typeof p.apiKey === 'string') next.apiKey = p.apiKey;
+        if (Array.isArray(p.body)) next.body = p.body;
+        if (Array.isArray(p.cardio)) next.cardio = p.cardio;
         if (Object.keys(next).length) this.setState(next);
       }
     } catch (e) {}
@@ -1015,18 +1012,48 @@ class Component extends DCLogic {
       return { editRow: ei + '-' + j, session: s.session.map((x, i) => i !== ei ? x : Object.assign({}, x, { sets: arr })) };
     });
   }
+  setBodyForm(k, v) { this.setState(s => ({ bodyForm: Object.assign({}, s.bodyForm, { [k]: v }) })); }
+  setCardioForm(k, v) { this.setState(s => ({ cardioForm: Object.assign({}, s.cardioForm, { [k]: v }) })); }
+  addBody() {
+    const f = this.state.bodyForm, kg = parseFloat(f.kg);
+    if (!(kg > 0)) return;
+    const e = { d: new Date().toISOString(), kg: kg, sm: parseFloat(f.sm) || null, fat: parseFloat(f.fat) || null };
+    this.setState(s => ({ body: s.body.concat([e]), bodyForm: { kg: '', sm: '', fat: '' } }), () => this.store());
+  }
+  delBody(i) { this.setState(s => ({ body: s.body.filter((x, j) => j !== i) }), () => this.store()); }
+  addCardio() {
+    const f = this.state.cardioForm, mins = parseFloat(f.mins);
+    if (!(mins > 0)) return;
+    const e = { d: new Date().toISOString(), type: f.type, mins: mins, km: parseFloat(f.km) || 0, hr: parseFloat(f.hr) || 0,
+      kcal: Math.round(mins * (f.type === '러닝' ? 11.4 : f.type === '자전거' ? 9.4 : 6.2)) };
+    this.setState(s => ({ cardio: s.cardio.concat([e]), cardioForm: { type: f.type, mins: '', km: '', hr: '' } }), () => this.store());
+  }
+  delCardio(i) { this.setState(s => ({ cardio: s.cardio.filter((x, j) => j !== i) }), () => this.store()); }
   delSet(ei, si) {
     this.setState(s => ({ editRow: null, session: s.session.map((x, i) => i !== ei || x.sets.length < 2 ? x : Object.assign({}, x, { sets: x.sets.filter((t, j) => j !== si) })) }));
   }
 
+  emptyData() {
+    const p = this.PROG[0];
+    return { sessions: [], today: { prog: p, ex: p.ex.map(([k, ns]) => this.makeEx(k, ns, false)) } };
+  }
+  entries() {
+    const saved = (this.state && this.state.saved) || {};
+    return Object.keys(saved).map(k => Object.assign({ md: k }, saved[k], { dt: new Date(saved[k].date || 0) }))
+      .filter(e => !isNaN(e.dt)).sort((a, b) => a.dt - b.dt);
+  }
   lastFor(k) {
-    const s = this.d.sessions.slice(0, -1).reverse().find(x => x.ex.some(e => e.key === k));
-    return s ? { ex: s.ex.find(e => e.key === k), date: s.date } : null;
+    const list = this.entries();
+    for (let i = list.length - 1; i >= 0; i--) {
+      const e = (list[i].ex || []).find(x => x.key === k && x.sets && x.sets.length);
+      if (e) return { ex: e, date: list[i].dt };
+    }
+    return null;
   }
   makeEx(k, ns, bump) {
     const e = this.EX[k], last = this.lastFor(k);
     const prevW = last ? last.ex.sets[0].w : e.base;
-    const w0 = prevW === 0 ? 0 : this.snap(prevW + (bump ? e.st : 0), e);
+    const w0 = prevW === 0 ? 0 : this.snap(prevW + (bump && last ? e.st : 0), e);
     const r0 = last ? last.ex.sets[0].r : e.rep;
     const sets = [];
     for (let i = 0; i < ns; i++) sets.push({ w: w0, r: Math.max(3, r0 - (i >= 2 ? 1 : 0) - (i >= 3 ? 1 : 0)), done: false });
@@ -1044,22 +1071,24 @@ class Component extends DCLogic {
     this.setState(s => ({ session: s.session.filter((x, i) => i !== ei) }));
   }
   context() {
-    const d = this.d, wk = d.wk.slice(-4), s = d.series;
+    const S = this.state, now = new Date(), entries = this.entries(), last = S.session;
     const gp = {};
-    d.wk[25].list.forEach(x => x.ex.forEach(e => { gp[e.group] = (gp[e.group] || 0) + e.sets.length; }));
-    const last = this.state.session;
-    return [
-      '프로그램: 4분할(상체A/하체A/상체B/하체B, 머신·스미스·덤벨 중심) 주 4회, 26주 진행중. 양쪽 표기 종목은 한쪽 무게',
-      '최근 4주 주간 볼륨: ' + wk.map(w => (w.vol / 1000).toFixed(1) + 't').join(', '),
-      '최근 4주 주간 세트수: ' + wk.map(w => w.sets).join(', '),
-      '이번 주 부위별 세트: ' + Object.keys(gp).map(k => k + ' ' + gp[k]).join(', '),
-      '주요 종목 8주 무게 변화: 핵스쿼트(한쪽) ' + s.hack[18] + '→' + s.hack[25] + 'kg, 레그프레스 ' + s.legpress[18] + '→' + s.legpress[25] + 'kg, 스미스 인클라인(한쪽) ' + s.smithinc[18] + '→' + s.smithinc[25] + 'kg',
-      '최근 세션 5개: ' + d.sessions.slice(-6, -1).map(x => this.md(x.date) + ' ' + x.prog.name + ' ' + (x.vol / 1000).toFixed(1) + 't/' + x.nsets + '세트').join(' | '),
-      '체중: 26주전 ' + d.weights[0].kg + 'kg → 현재 ' + d.weights[25].kg + 'kg',
-      '인바디: 골격근량 ' + d.inbody[0].sm + '→' + d.inbody[6].sm + 'kg, 체지방률 ' + d.inbody[0].fat + '→' + d.inbody[6].fat + '%',
-      '오늘(8/15) ' + this.PROG[this.state.progIdx].name + ' 진행중, 완료 ' + last.reduce((a, x) => a + x.sets.filter(t => t.done).length, 0) + '/' + last.reduce((a, x) => a + x.sets.length, 0) + '세트',
-      '오늘 첫 종목 ' + last[0].name + ': ' + last[0].sets.map(t => (t.w || '맨몸') + 'kg×' + t.r).join(', ')
-    ].join('\n');
+    entries.filter(e => this.weeksAgo(e.dt, now) === 11).forEach(x => (x.ex || []).forEach(e => { if (e.group) gp[e.group] = (gp[e.group] || 0) + e.sets.length; }));
+    const wkv = [];
+    for (let i = 3; i >= 0; i--) { const l = entries.filter(e => this.weeksAgo(e.dt, now) === 11 - i); wkv.push((l.reduce((a, e) => a + (e.vol || 0), 0) / 1000).toFixed(1) + 't'); }
+    const body = (S.body || []).slice(), cardio = (S.cardio || []).slice();
+    const lines = [
+      '프로그램: 4분할(상체A/하체A/상체B/하체B, 머신·스미스·덤벨 중심). 양쪽 표기 종목은 한쪽 무게, 볼륨은 좌우 합산',
+      '저장된 세션 수: ' + entries.length + '회' + (entries.length ? ' (' + this.md(entries[0].dt) + '~' + this.md(entries[entries.length - 1].dt) + ')' : ''),
+      '최근 4주 주간 볼륨: ' + wkv.join(', '),
+      Object.keys(gp).length ? '이번 주 부위별 세트: ' + Object.keys(gp).map(k => k + ' ' + gp[k]).join(', ') : '이번 주 기록 없음',
+      entries.length ? '최근 세션: ' + entries.slice(-5).map(x => this.md(x.dt) + ' ' + x.prog + ' ' + (x.vol / 1000).toFixed(1) + 't/' + x.nsets + '세트 [' + (x.ex || []).map(e => e.name + ' ' + e.sets.map(t => (t.w || 0) + '×' + t.r).join('/')).join(', ') + ']').join(' | ') : '',
+      body.length ? '체중/인바디: ' + body.slice(-6).map(b => this.md(new Date(b.d)) + ' ' + b.kg + 'kg' + (b.sm ? ' 골격근 ' + b.sm : '') + (b.fat ? ' 체지방률 ' + b.fat + '%' : '')).join(' | ') : '체중·인바디 기록 없음',
+      cardio.length ? '유산소: ' + cardio.slice(-6).map(c => this.md(new Date(c.d)) + ' ' + c.type + ' ' + c.mins + '분' + (c.km ? ' ' + c.km + 'km' : '') + (c.hr ? ' ' + c.hr + 'bpm' : '')).join(' | ') : '유산소 기록 없음',
+      '오늘 ' + this.PROG[S.progIdx].name + ' 진행중, 완료 ' + last.reduce((a, x) => a + x.sets.filter(t => t.done).length, 0) + '/' + last.reduce((a, x) => a + x.sets.length, 0) + '세트',
+      '오늘 세트: ' + last.map(x => x.name + ' ' + x.sets.map(t => (t.w || 0) + '×' + t.r).join('/')).join(' | ')
+    ];
+    return lines.filter(Boolean).join('\n');
   }
   tone() {
     const t = this.props.aiTone ?? '담백한 분석';
@@ -1120,7 +1149,7 @@ class Component extends DCLogic {
     const curVol = S.session.reduce((a, x) => a + (x.mult || 1) * x.sets.filter(t => t.done).reduce((b, t) => b + t.w * t.r, 0), 0);
     let firstOpen = -1;
     S.session.forEach((x, i) => x.sets.forEach((t, j) => { if (firstOpen < 0 && !t.done) firstOpen = i * 100 + j; }));
-    const prevOf = k => { const s = d.sessions.slice(0, -1).reverse().find(x => x.ex.some(e => e.key === k)); if (!s) return '없음'; const e = s.ex.find(e => e.key === k); return this.md(s.date) + ' · ' + (e.sets[0].w || '맨몸') + (e.sets[0].w ? 'kg' : '') + ' × ' + e.sets.map(t => t.r).join(','); };
+    const prevOf = k => { const l = this.lastFor(k); if (!l) return '없음 · 프로그램 무게로 시작'; return this.md(l.date) + ' · ' + (l.ex.sets[0].w || '맨몸') + (l.ex.sets[0].w ? 'kg' : '') + ' × ' + l.ex.sets.map(t => t.r).join(','); };
     const plateOn = this.props.plateHelper ?? true;
     const session = S.session.map((x, ei) => {
       const activeSet = x.sets.findIndex((t, j) => ei * 100 + j === firstOpen);
@@ -1156,7 +1185,7 @@ class Component extends DCLogic {
         })
       };
     });
-    const lastSame = d.sessions.slice(0, -1).reverse().find(x => x.prog.name === prog.name);
+    const lastSame = this.entries().reverse().find(x => x.prog === prog.name && x.md !== this.md(new Date()));
     const inSession = S.session.map(x => x.key);
     const sheetRows = S.sheet === 'program'
       ? this.PROG.map((p, pi) => {
@@ -1174,70 +1203,88 @@ class Component extends DCLogic {
         });
     const projected = allN ? curVol / Math.max(1, doneN) * allN : 0;
 
-    // ── analysis / week
-    const wkNow = d.wk[25], wkPrev = d.wk[24];
-    const wkList = wkNow.list.map(s => { const sv = S.saved[this.md(s.date)]; return sv ? { date: s.date, prog: { name: sv.prog }, vol: sv.vol, nsets: sv.nsets, ex: sv.ex, saved: true } : s; });
-    const wkVol = wkList.reduce((a, s) => a + s.vol, 0), wkSets = wkList.reduce((a, s) => a + s.nsets, 0);
-    const gp = {};
-    wkList.forEach(x => x.ex.forEach(e => { if (e.group) gp[e.group] = (gp[e.group] || 0) + e.sets.length; }));
-    const gpKeys = Object.keys(gp).sort((a, b) => gp[b] - gp[a]);
-    const gpMax = Math.max.apply(null, gpKeys.map(k => gp[k]));
-    const wkBarsRaw = d.wk.slice(-12);
-    const wb = this.bars(wkBarsRaw.map(w => w.vol), 342, 84, 6);
-
-    // ── analysis / day
-    const strip = [];
-    for (let i = 13; i >= 0; i--) {
-      const dt = new Date(2026, 7, 15 - i);
-      const s = d.sessions.find(x => x.date.getMonth() === dt.getMonth() && x.date.getDate() === dt.getDate());
-      strip.push({ i: i, dt: dt, s: s });
+    // ── real records (모든 집계는 저장된 내 기록에서만)
+    const now = new Date(), todayMd = this.md(now);
+    const entries = this.entries();
+    const wkOf = dt => this.weeksAgo(dt, now);
+    const wkBuckets = [];
+    for (let i = 11; i >= 0; i--) {
+      const l = entries.filter(e => wkOf(e.dt) === i);
+      wkBuckets.push({ list: l, vol: l.reduce((a, e) => a + (e.vol || 0), 0), sets: l.reduce((a, e) => a + (e.nsets || 0), 0) });
     }
+    const wkNow = wkBuckets[11], wkPrev = wkBuckets[10];
+    const wkList = wkNow.list, wkVol = wkNow.vol, wkSets = wkNow.sets;
+    const gp = {};
+    wkList.forEach(x => (x.ex || []).forEach(e => { if (e.group) gp[e.group] = (gp[e.group] || 0) + e.sets.length; }));
+    const gpKeys = Object.keys(gp).sort((a, b) => gp[b] - gp[a]);
+    const gpMax = gpKeys.length ? gp[gpKeys[0]] : 1;
+    const wb = this.bars(wkBuckets.map(w => w.vol || 0), 342, 84, 6);
+
+    // day
+    const strip = [];
+    for (let i = 13; i >= 0; i--) { const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i); strip.push({ i: i, dt: dt, has: !!S.saved[this.md(dt)] }); }
     const sel = strip.find(x => x.i === S.dayOffset) || strip[13];
     const dayStrip = strip.map(x => ({
       dw: this.DW[x.dt.getDay()], dd: x.dt.getDate(), go: () => this.setState({ dayOffset: x.i }),
       style: { flexShrink: 0, width: 42, padding: '8px 0 7px', borderRadius: 12, textAlign: 'center', cursor: 'pointer', background: x.i === S.dayOffset ? A : '#fff', border: '1px solid ' + (x.i === S.dayOffset ? A : '#EDE8DF'), color: x.i === S.dayOffset ? '#fff' : '#1A1713' },
-      dotStyle: { width: 4, height: 4, borderRadius: 3, margin: '5px auto 0', background: x.s ? (x.i === S.dayOffset ? '#fff' : A) : 'transparent' }
+      dotStyle: { width: 4, height: 4, borderRadius: 3, margin: '5px auto 0', background: x.has ? (x.i === S.dayOffset ? '#fff' : A) : 'transparent' }
     }));
-    const dayPrBy = {};
-    d.prs.forEach(p => { dayPrBy[this.md(p.date) + p.name] = true; });
-    const dayEx = sel.s ? sel.s.ex.map(e => ({
-      name: e.name, pr: !!dayPrBy[this.md(sel.s.date) + e.name],
-      sets: e.sets.map(t => (t.w || '맨몸') + '×' + t.r).join('  ·  '),
-      vol: e.sets.every(t => !t.w) ? '맨몸' : this.vol((e.mult || 1) * e.sets.reduce((a, t) => a + t.w * t.r, 0))
-    })) : [];
     const selSaved = S.saved[this.md(sel.dt)];
-    const dayS = selSaved
-      ? { prog: selSaved.prog + (selSaved.sub ? ' · ' + selSaved.sub : ''), vol: this.vol(selSaved.vol), nsets: selSaved.nsets, mins: selSaved.mins }
-      : sel.s ? { prog: sel.s.prog.name + ' · ' + sel.s.prog.sub, vol: this.vol(sel.s.vol), nsets: sel.s.nsets, mins: sel.s.mins } : null;
+    const dayS = selSaved ? { prog: selSaved.prog + (selSaved.sub ? ' · ' + selSaved.sub : ''), vol: this.vol(selSaved.vol), nsets: selSaved.nsets, mins: selSaved.mins } : null;
     const dayExFinal = selSaved ? selSaved.ex.map(e => ({ name: e.name, pr: false,
       sets: e.sets.map(t => (t.w || '맨몸') + '×' + t.r).join('  ·  '),
-      vol: e.sets.every(t => !t.w) ? '맨몸' : this.vol((e.mult || 1) * e.sets.reduce((a, t) => a + t.w * t.r, 0)) })) : dayEx;
+      vol: e.sets.every(t => !t.w) ? '맨몸' : this.vol((e.mult || 1) * e.sets.reduce((a, t) => a + t.w * t.r, 0)) })) : [];
 
-    // ── analysis / month
-    const mb = this.bars(d.mo.map(m => m.vol), 342, 62, 8);
-    const liftMeta = [['hack', '핵스쿼트', '#1A1713', 2.4], ['legpress', '레그프레스', '#8E887E', 2], ['smithinc', '스미스 인클라인', A, 2.4]];
-    const smooth = a => a.map((v, i) => Math.max.apply(null, a.slice(Math.max(0, i - 3), i + 1)));
-    const rangeOf = k => { const a = smooth(d.series[k]), mn = Math.min.apply(null, a), mx = Math.max.apply(null, a), p = Math.max(1, (mx - mn) * 0.3); return [mn - p, mx + p]; };
-    const liftRows = liftMeta.map(([k, n, c]) => {
-      const raw = d.series[k], sm = smooth(raw), r = rangeOf(k);
-      const p = this.pts(sm, 342, 34, 4, r[0], r[1]), diff = +(raw[25] - raw[0]).toFixed(1);
-      return { name: n, color: c, pts: this.str(p), endX: p[25].x, endY: p[25].y,
-        from: raw[0] + 'kg', now: raw[25] + 'kg',
+    // month
+    const moBuckets = [];
+    for (let i = 5; i >= 0; i--) {
+      const m = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const l = entries.filter(e => e.dt.getMonth() === m.getMonth() && e.dt.getFullYear() === m.getFullYear());
+      moBuckets.push({ m: m.getMonth() + 1, vol: l.reduce((a, e) => a + (e.vol || 0), 0) });
+    }
+    const mb = this.bars(moBuckets.map(m => m.vol || 0), 342, 62, 8);
+    const seriesFor = k => entries.map(e => { const x = (e.ex || []).find(y => y.key === k && y.sets.length); return x ? Math.max.apply(null, x.sets.map(t => t.w)) : null; }).filter(v => v !== null);
+    const liftMeta = [['hack', '핵스쿼트', '#1A1713'], ['legpress', '레그프레스', '#8E887E'], ['smithinc', '스미스 인클라인', A]];
+    const liftRows = liftMeta.map(([k, n, col]) => {
+      const vals = seriesFor(k);
+      if (vals.length < 2) return null;
+      const mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), pad = Math.max(1, (mx - mn) * 0.3);
+      const p = this.pts(vals, 342, 34, 4, mn - pad, mx + pad), diff = +(vals[vals.length - 1] - vals[0]).toFixed(1);
+      return { name: n, color: col, pts: this.str(p), endX: p[p.length - 1].x, endY: p[p.length - 1].y,
+        from: vals[0] + 'kg', now: vals[vals.length - 1] + 'kg',
         delta: diff === 0 ? '변화 없음' : this.sign(diff, 'kg', diff % 1 ? 1 : 0),
         dStyle: { whiteSpace: 'nowrap', fontFamily: "'IBM Plex Mono',monospace", fontSize: 11.5, fontWeight: 600, color: diff === 0 ? '#A39C91' : A } };
-    });
+    }).filter(Boolean);
+    const best = {}, prList = [];
+    entries.forEach(e => (e.ex || []).forEach(x => {
+      if (!x.sets || !x.sets.length) return;
+      const top = x.sets.reduce((a, b) => (b.w > a.w ? b : a));
+      if (!top.w) return;
+      if (!best[x.key] || top.w > best[x.key]) { best[x.key] = top.w; prList.push({ dt: e.dt, name: x.name, set: top.w + 'kg × ' + top.r }); }
+    }));
+    const prs = prList.slice(-6).reverse();
 
-    // ── body
-    const wv = d.weights.map(w => w.kg);
-    const wp = this.pts(wv, 342, 108, 4);
-    const ib = d.inbody, ibLast = ib[6], ibFirst = ib[0];
-    const smP = this.pts(ib.map(x => x.sm), 342, 110, 6);
-    const fatP = this.pts(ib.map(x => x.fat), 342, 110, 6);
+    // body
+    const bodyList = (S.body || []).map(b => Object.assign({}, b, { dt: new Date(b.d) })).sort((a, b) => a.dt - b.dt);
+    const bLast = bodyList[bodyList.length - 1], bFirst = bodyList[0];
+    const wvals = bodyList.map(b => b.kg);
+    const wp = wvals.length > 1 ? this.pts(wvals, 342, 108, 4) : [];
+    const ibList = bodyList.filter(b => b.sm || b.fat);
+    const ibLast = ibList[ibList.length - 1], ibFirst = ibList[0];
+    const smVals = ibList.map(b => b.sm || 0), fatVals = ibList.map(b => b.fat || 0);
+    const smP = ibList.length > 1 ? this.pts(smVals, 342, 110, 6) : [];
+    const fatP = ibList.length > 1 ? this.pts(fatVals, 342, 110, 6) : [];
 
-    // ── cardio
-    const c = d.cardio, cw = c.wk[11], cwPrev = c.wk[10];
-    const cBars = this.bars(c.wk.map(w => w.mins), 342, 74, 6);
-    const vo2P = this.pts(c.vo2, 342, 76, 8);
+    // cardio
+    const cList = (S.cardio || []).map(x => Object.assign({}, x, { dt: new Date(x.d) })).sort((a, b) => a.dt - b.dt);
+    const cWk = [];
+    for (let i = 11; i >= 0; i--) {
+      const l = cList.filter(x => wkOf(x.dt) === i), hrs = l.filter(x => x.hr);
+      cWk.push({ mins: l.reduce((a, x) => a + x.mins, 0), km: l.reduce((a, x) => a + (x.km || 0), 0), kcal: l.reduce((a, x) => a + (x.kcal || 0), 0),
+        hr: hrs.length ? Math.round(hrs.reduce((a, x) => a + x.hr, 0) / hrs.length) : 0, n: l.length });
+    }
+    const cw = cWk[11], cwPrev = cWk[10];
+    const cBars = this.bars(cWk.map(w => w.mins || 0), 342, 74, 6);
 
     // ── ai
     const rep = S.report;
@@ -1246,9 +1293,9 @@ class Component extends DCLogic {
     return {
       railTabs: railTabs, tabs: tabs,
       isToday: S.tab === 'today', isCardio: S.tab === 'cardio', isAnalysis: S.tab === 'analysis', isBody: S.tab === 'body', isAI: S.tab === 'ai',
-      headKicker: S.tab === 'today' ? '8월 15일 토요일 · 26주차' : S.tab === 'cardio' ? 'CARDIO' : S.tab === 'analysis' ? 'ANALYSIS' : S.tab === 'body' ? 'BODY' : 'CLAUDE',
+      headKicker: S.tab === 'today' ? (now.getMonth() + 1) + '월 ' + now.getDate() + '일 ' + this.DW[now.getDay()] + '요일' : S.tab === 'cardio' ? 'CARDIO' : S.tab === 'analysis' ? 'ANALYSIS' : S.tab === 'body' ? 'BODY' : 'CLAUDE',
       headTitle: S.tab === 'today' ? prog.name : S.tab === 'cardio' ? '유산소' : S.tab === 'analysis' ? '기록 분석' : S.tab === 'body' ? '체중 · 인바디' : 'AI 분석',
-      headMeta: S.tab === 'today' ? prog.sub + ' · 주 4회' : S.tab === 'cardio' ? '건강 앱 연동 · 주 3회' : S.tab === 'analysis' ? '26주 · 세션 ' + d.sessions.length + '회' : S.tab === 'body' ? '주 1회 · 인바디 7회' : '기록 기반 코칭',
+      headMeta: S.tab === 'today' ? prog.sub : S.tab === 'cardio' ? '유산소 ' + cList.length + '건' : S.tab === 'analysis' ? '저장된 세션 ' + entries.length + '회' : S.tab === 'body' ? '측정 ' + bodyList.length + '회' : '내 기록 기반',
       progLabel: doneN + ' / ' + allN + ' 세트 완료',
       volLabel: this.vol(curVol) + ' · 예상 ' + this.vol(projected),
       progBarStyle: { width: (allN ? doneN / allN * 100 : 0) + '%', height: '100%', borderRadius: 3, background: '#fff', transition: 'width .25s' },
@@ -1265,85 +1312,100 @@ class Component extends DCLogic {
       bumpNote: S.bump ? '지난 무게 + 한 단계로 채웁니다' : '지난 무게 그대로 채웁니다',
       bumpStyle: { width: 42, height: 25, flexShrink: 0, borderRadius: 999, background: S.bump ? A : '#DED7CB', display: 'flex', alignItems: 'center', padding: 3, justifyContent: S.bump ? 'flex-end' : 'flex-start', transition: 'all .18s' },
       knobStyle: { width: 19, height: 19, borderRadius: 999, background: '#fff' },
-      sCompare: lastSame ? '지난 ' + prog.name + '(' + this.md(lastSame.date) + ') ' + this.vol(lastSame.vol) + ' 대비 예상 ' + this.sign((projected - lastSame.vol) / lastSame.vol * 100, '%', 0) + ' · 벤치 첫 세트 ' + this.sign(S.session[0].sets[0].w - lastSame.ex[0].sets[0].w, 'kg', 1) : '',
-      savedNote: S.saved[this.md(new Date(2026, 7, 15))] ? '이 기기에 저장됨 · ' + S.saved[this.md(new Date(2026, 7, 15))].at : null,
+      sCompare: lastSame ? '지난 ' + prog.name + '(' + this.md(lastSame.dt) + ') ' + this.vol(lastSame.vol) + ' 대비 예상 ' + this.sign((projected - lastSame.vol) / lastSame.vol * 100, '%', 0) : entries.length ? '저장된 세션 ' + entries.length + '회 · 이 프로그램은 첫 기록이에요.' : '첫 기록입니다. 세트를 체크하고 아래 버튼을 누르면 여기에 쌓입니다.',
+      savedNote: S.saved[todayMd] ? '이 기기에 저장됨 · ' + S.saved[todayMd].at : null,
       finishLabel: S.finished ? '다음 프로그램 시작 →' : doneN === allN ? '운동 완료 · 기록 저장' : '남은 ' + (allN - doneN) + '세트 건너뛰고 저장',
       finish: () => {
         if (S.finished) { this.setProgram((S.progIdx + 1) % this.PROG.length); return; }
-        const md = this.md(new Date(2026, 7, 15));
+        const md = this.md(new Date());
         const ex = S.session.map(x => ({ name: x.name, key: x.key, group: x.group, mult: x.mult || 1,
           sets: x.sets.filter(t => t.done).map(t => ({ w: t.w, r: t.r })) })).filter(x => x.sets.length);
         const vol = ex.reduce((a, x) => a + x.mult * x.sets.reduce((b, t) => b + t.w * t.r, 0), 0);
-        const entry = { prog: prog.name, sub: prog.sub, ex: ex, vol: vol,
+        const entry = { date: new Date().toISOString(), prog: prog.name, sub: prog.sub, ex: ex, vol: vol,
           nsets: ex.reduce((a, x) => a + x.sets.length, 0), mins: Math.max(1, Math.round(S.elapsed / 60)),
           at: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) };
         const saved = Object.assign({}, S.saved); saved[md] = entry;
         this.setState({ finished: true, restOn: false, saved: saved }, () => this.store());
       },
       restOn: S.restOn, restLabel: this.mmss(Math.max(0, S.rest)), skipRest: () => this.setState({ restOn: false, rest: 0 }),
+      resetLabel: S.confirmReset ? '한 번 더 누르면 모두 삭제됩니다' : '저장된 기록 전체 초기화',
+      resetAll: () => {
+        if (!S.confirmReset) { this.setState({ confirmReset: true }); setTimeout(() => this.setState({ confirmReset: false }), 4000); return; }
+        this.setState({ saved: {}, body: [], cardio: [], report: null, chat: [], confirmReset: false }, () => this.setProgram(0));
+      },
 
       ranges: [['day', '일'], ['week', '주'], ['month', '월']].map(([k, label]) => ({
         label: label, go: () => this.setState({ range: k }),
         style: { flex: 1, height: 34, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, cursor: 'pointer', background: S.range === k ? A : 'transparent', color: S.range === k ? '#fff' : '#8E887E', boxShadow: S.range === k ? '0 1px 4px rgba(255,90,46,.35)' : 'none' }
       })),
       isDay: S.range === 'day', isWeek: S.range === 'week', isMonth: S.range === 'month',
+      hasAny: entries.length > 0, hasWeek: wkList.length > 0, hasGroups: gpKeys.length > 0,
+      emptyWeek: '이번 주 저장된 세션이 없습니다. 오늘 탭에서 운동을 기록하면 여기에 집계됩니다.',
       wVol: (wkVol / 1000).toFixed(1) + 't', wSets: wkSets, wDays: wkList.length + '일',
-      wDelta: '지난주 대비 ' + this.sign((wkVol - wkPrev.vol) / wkPrev.vol * 100, '%', 0),
+      wDelta: wkPrev.vol ? '지난주 대비 ' + this.sign((wkVol - wkPrev.vol) / wkPrev.vol * 100, '%', 0) : '',
       weekBars: wb.map((b, i) => Object.assign({}, b, { fill: i === 11 ? A : '#E4DED2', lab: i === 11 ? '#1A1713' : '#A39C91', t: i === 11 ? '이번' : (12 - i - 1) + 'w' })),
       groupBars: gpKeys.map(k => ({ name: k, txt: gp[k] + '세트', w: +(gp[k] / gpMax * 342).toFixed(1), fill: gp[k] === gpMax ? A : '#D9D3C8' })),
-      balanceNote: gpKeys[gpKeys.length - 1] + ' 세트가 ' + gpKeys[0] + '의 ' + Math.round(gp[gpKeys[gpKeys.length - 1]] / gp[gpKeys[0]] * 100) + '% 수준입니다. 4분할에서 흔한 편차예요.',
-      weekSessions: wkList.map(s => ({ day: this.DW[s.date.getDay()] + ' ' + s.date.getDate(), prog: s.prog.name + (s.saved ? ' · 저장됨' : s.deload ? ' · 디로드' : ''), vol: this.vol(s.vol), sets: s.nsets })),
+      balanceNote: gpKeys.length > 1 ? gpKeys[gpKeys.length - 1] + ' 세트가 ' + gpKeys[0] + '의 ' + Math.round(gp[gpKeys[gpKeys.length - 1]] / gp[gpKeys[0]] * 100) + '% 수준입니다.' : '',
+      weekSessions: wkList.map(s => ({ day: this.DW[s.dt.getDay()] + ' ' + s.dt.getDate(), prog: s.prog, vol: this.vol(s.vol), sets: s.nsets })),
 
       dayStrip: dayStrip, dayHas: !!dayS, dayRest: !dayS,
       dayProg: dayS ? dayS.prog : '',
       dayDate: this.md(sel.dt) + ' ' + this.DW[sel.dt.getDay()] + (selSaved ? ' · 저장됨' : ''),
       dayVol: dayS ? dayS.vol : '', daySets: dayS ? dayS.nsets : '', dayTime: dayS ? this.hm(dayS.mins) : '',
       dayEx: dayExFinal,
-      restNote: this.md(sel.dt) + '에는 기록이 없습니다. 전날 ' + (d.sessions.filter(x => x.date < sel.dt).slice(-1)[0] || {}).prog?.name + ' 이후 회복일로 처리됐어요.',
+      restNote: '이 날은 저장된 기록이 없습니다.',
 
-      monthBars: mb.map((b, i) => Object.assign({}, b, { y: b.y + 20, fill: i === 5 ? A : '#E4DED2', vy: b.y + 14, vfill: i === 5 ? A : '#8E887E', v: (b.v / 1000).toFixed(0) + 't', t: d.mo[i].m + '월' })),
-      liftRows: liftRows,
-      prs: d.prs.map(p => ({ date: this.md(p.date), name: p.name, set: p.set })),
+      monthBars: mb.map((b, i) => Object.assign({}, b, { y: b.y + 20, fill: i === 5 ? A : '#E4DED2', vy: b.y + 14, vfill: i === 5 ? A : '#8E887E', v: b.v ? (b.v / 1000).toFixed(1) + 't' : '', t: moBuckets[i].m + '월' })),
+      liftRows: liftRows, hasLifts: liftRows.length > 0,
+      prs: prs.map(p => ({ date: this.md(p.dt), name: p.name, set: p.set })), hasPrs: prs.length > 0,
+      emptyMonth: '주요 종목이 2회 이상 기록되면 증량 추이가 그려집니다.',
 
-      wNow: d.weights[25].kg.toFixed(1), wChange: this.sign(d.weights[25].kg - d.weights[0].kg, 'kg'),
-      wPts: this.str(wp), wArea: 'M' + wp.map(p => p.x + ' ' + p.y).join(' L ') + ' L 338 108 L 4 108 Z',
-      wEndX: wp[25].x, wEndY: wp[25].y,
-      wMax: Math.max.apply(null, wv).toFixed(1) + 'kg', wMin: Math.min.apply(null, wv).toFixed(1) + 'kg',
-      ibDate: this.md(ibLast.date),
-      ibCards: [
-        { label: '골격근량', val: ibLast.sm.toFixed(1), delta: this.sign(ibLast.sm - ibFirst.sm, 'kg') },
-        { label: '체지방률', val: ibLast.fat.toFixed(1), delta: this.sign(ibLast.fat - ibFirst.fat, '%') },
-        { label: '체지방량', val: ibLast.fatKg.toFixed(1), delta: this.sign(ibLast.fatKg - ibFirst.fatKg, 'kg') }
-      ],
+      hasBody: bodyList.length > 0, hasWChart: wp.length > 1, noWChart: wp.length < 2,
+      noCardio: cList.length === 0, noWeek: wkList.length === 0, noLifts: liftRows.length === 0, noPrs: prs.length === 0,
+      wNow: bLast ? bLast.kg.toFixed(1) : '–', wChange: bLast && bFirst && bLast !== bFirst ? this.sign(bLast.kg - bFirst.kg, 'kg') : '',
+      wPts: this.str(wp), wArea: wp.length > 1 ? 'M' + wp.map(p => p.x + ' ' + p.y).join(' L ') + ' L 338 108 L 4 108 Z' : '',
+      wEndX: wp.length ? wp[wp.length - 1].x : 0, wEndY: wp.length ? wp[wp.length - 1].y : 0,
+      wMax: wvals.length ? Math.max.apply(null, wvals).toFixed(1) + 'kg' : '', wMin: wvals.length ? Math.min.apply(null, wvals).toFixed(1) + 'kg' : '',
+      bodyEmpty: '아래에 체중을 입력하면 추이가 그려집니다.',
+      hasIb: !!ibLast, hasIbChart: ibList.length > 1,
+      ibDate: ibLast ? this.md(ibLast.dt) : '',
+      ibCards: ibLast ? [
+        { label: '골격근량', val: ibLast.sm ? ibLast.sm.toFixed(1) : '–', delta: ibFirst && ibLast.sm && ibFirst.sm && ibLast !== ibFirst ? this.sign(ibLast.sm - ibFirst.sm, 'kg') : '' },
+        { label: '체지방률', val: ibLast.fat ? ibLast.fat.toFixed(1) : '–', delta: ibFirst && ibLast.fat && ibFirst.fat && ibLast !== ibFirst ? this.sign(ibLast.fat - ibFirst.fat, '%') : '' },
+        { label: '체지방량', val: ibLast.fat ? (ibLast.kg * ibLast.fat / 100).toFixed(1) : '–', delta: '' }
+      ] : [],
       smPts: this.str(smP), fatPts: this.str(fatP),
       ibDots: smP.map(p => Object.assign({ color: '#1A1713' }, p)).concat(fatP.map(p => Object.assign({ color: A }, p))),
-      ibTicks: ib.map((x, i) => ({ x: smP[i].x, label: (x.date.getMonth() + 1) + '월' })),
-      ibNote: '체중 ' + this.sign(ibLast.kg - ibFirst.kg, 'kg') + ' 중 골격근량이 ' + this.sign(ibLast.sm - ibFirst.sm, 'kg') + ', 체지방량은 ' + this.sign(ibLast.fatKg - ibFirst.fatKg, 'kg') + '입니다. 늘어난 무게의 대부분이 근육이에요.',
-      ibRows: ib.slice().reverse().map(x => ({ date: this.md(x.date), wt: x.kg.toFixed(1), sm: x.sm.toFixed(1), fat: x.fat.toFixed(1) + '%' })),
+      ibTicks: ibList.length > 1 ? ibList.map((x, i) => ({ x: smP[i].x, label: (x.dt.getMonth() + 1) + '/' + x.dt.getDate() })) : [],
+      ibNote: ibLast && ibFirst && ibLast !== ibFirst ? '첫 측정 대비 체중 ' + this.sign(ibLast.kg - ibFirst.kg, 'kg') + (ibLast.sm && ibFirst.sm ? ' · 골격근량 ' + this.sign(ibLast.sm - ibFirst.sm, 'kg') : '') + (ibLast.fat && ibFirst.fat ? ' · 체지방률 ' + this.sign(ibLast.fat - ibFirst.fat, '%') : '') : '인바디 결과를 두 번 이상 넣으면 변화가 계산됩니다.',
+      ibRows: bodyList.slice().reverse().map((x, i) => ({ date: this.md(x.dt), wt: x.kg.toFixed(1), sm: x.sm ? x.sm.toFixed(1) : '–', fat: x.fat ? x.fat.toFixed(1) + '%' : '–', del: () => this.delBody(bodyList.length - 1 - i) })),
+      bodyKg: S.bodyForm.kg, bodySm: S.bodyForm.sm, bodyFat: S.bodyForm.fat,
+      onBodyKg: e => this.setBodyForm('kg', e.target.value),
+      onBodySm: e => this.setBodyForm('sm', e.target.value),
+      onBodyFat: e => this.setBodyForm('fat', e.target.value),
+      addBody: () => this.addBody(),
 
-      cSynced: S.syncedAt || '오늘 오전 9:12',
-      cSources: ['달리기', '걷기', '실내 자전거', '심박수', '활동 에너지', '체중'],
-      sync: () => this.setState({ syncedAt: '방금 · 새 기록 1건' }),
+      hasCardio: cList.length > 0,
       cMins: cw.mins, cGoalPct: Math.min(100, Math.round(cw.mins / 150 * 100)) + '%',
       cGoalNote: cw.mins >= 150 ? '주 150분 목표 달성 · +' + (cw.mins - 150) + '분' : '주 150분까지 ' + (150 - cw.mins) + '분 남음',
       cGoalBar: { width: Math.min(100, cw.mins / 150 * 100) + '%', height: '100%', borderRadius: 3, background: A },
-      cKm: cw.km.toFixed(1), cKcal: cw.kcal.toLocaleString(), cHr: cw.hr,
+      cKm: cw.km.toFixed(1), cKcal: cw.kcal.toLocaleString(), cHr: cw.hr || '–',
       cDelta: cwPrev.mins ? '지난주 대비 ' + this.sign(cw.mins - cwPrev.mins, '분', 0) : '',
-      cZones: ['회복', '유산소', '템포', '역치', '최대'].map((n, i) => ({
-        z: 'Z' + (i + 1), name: n, mins: cw.z[i] + '분',
-        w: +(cw.z[i] / Math.max(1, Math.max.apply(null, cw.z)) * 190).toFixed(1),
-        fill: ['#FBD9CC', '#F9BBA4', '#FB9A78', '#FD7A4E', '#FF5A2E'][i]
-      })),
-      cSessions: c.list.slice(-7).reverse().map(s => ({
-        date: this.md(s.date) + ' ' + this.DW[s.date.getDay()], type: s.type, src: s.src,
+      cSessions: cList.slice(-8).reverse().map((s, i) => ({
+        date: this.md(s.dt) + ' ' + this.DW[s.dt.getDay()], type: s.type,
         mins: s.mins + '분',
-        detail: s.km.toFixed(2) + 'km · ' + (s.ti === 1 ? (s.km / s.mins * 60).toFixed(1) + 'km/h' : this.pace(s.mins, s.km) + '/km') + ' · ' + s.hr + 'bpm · ' + s.kcal + 'kcal'
+        detail: (s.km ? s.km.toFixed(2) + 'km · ' + (s.type === '자전거' ? (s.km / s.mins * 60).toFixed(1) + 'km/h' : this.pace(s.mins, s.km) + '/km') + ' · ' : '') + (s.hr ? s.hr + 'bpm · ' : '') + s.kcal + 'kcal',
+        del: () => this.delCardio(cList.length - 1 - i)
       })),
       cBars: cBars.map((b, i) => Object.assign({}, b, { fill: i === 11 ? A : '#E4DED2', t: i === 11 ? '이번' : (11 - i) + 'w' })),
-      vo2Pts: this.str(vo2P), vo2Now: c.vo2[5].toFixed(1), vo2Delta: this.sign(c.vo2[5] - c.vo2[0], ''),
-      vo2Dots: vo2P.map((p, i) => Object.assign({ r: i === 5 ? 3.5 : 2.5 }, p)),
-      vo2Ticks: vo2P.map((p, i) => ({ x: p.x, label: (3 + i) + '월' })),
-      ctxSessions: d.wk.slice(-4).reduce((a, w) => a + w.days, 0), ctxInbody: 7,
+      cardioTypes: ['러닝', '자전거', '걷기'].map(t => ({ label: t, go: () => this.setCardioForm('type', t),
+        style: { flex: 1, height: 32, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: S.cardioForm.type === t ? A : '#fff', color: S.cardioForm.type === t ? '#fff' : '#8E887E', border: '1px solid ' + (S.cardioForm.type === t ? A : '#E9E4DB') } })),
+      cMinsIn: S.cardioForm.mins, cKmIn: S.cardioForm.km, cHrIn: S.cardioForm.hr,
+      onCMins: e => this.setCardioForm('mins', e.target.value),
+      onCKm: e => this.setCardioForm('km', e.target.value),
+      onCHr: e => this.setCardioForm('hr', e.target.value),
+      addCardio: () => this.addCardio(),
+      ctxSessions: entries.length, ctxInbody: bodyList.length,
       runAI: () => this.runAI(), runLabel: S.aiLoading ? '분석 중…' : rep ? '다시 분석하기' : '이번 주 분석하기',
       runBtnStyle: { marginTop: 14, height: 46, borderRadius: 13, background: S.aiLoading ? '#33302A' : A, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 600, cursor: S.aiLoading ? 'default' : 'pointer' },
       aiError: S.aiError,
