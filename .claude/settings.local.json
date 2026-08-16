@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(///wsl.localhost/Ubuntu/home/jimin/**)",
+      "Read(//mnt/wsl/Ubuntu/home/jimin/**)",
+      "Read(///wsl.localhost/Ubuntu/home/jimin/liftlog/**)",
+      "Bash(wsl *)",
+      "PowerShell(wsl -d Ubuntu -e bash -c \"cd ~/liftlog && git push origin main\")"
+    ]
+  }
+}
