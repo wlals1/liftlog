@@ -5,7 +5,9 @@
       "Read(//mnt/wsl/Ubuntu/home/jimin/**)",
       "Read(///wsl.localhost/Ubuntu/home/jimin/liftlog/**)",
       "Bash(wsl *)",
-      "PowerShell(wsl -d Ubuntu -e bash -c \"cd ~/liftlog && git push origin main\")"
+      "PowerShell(wsl -d Ubuntu -e bash -c \"cd ~/liftlog && git push origin main\")",
+      "Bash(git config *)",
+      "Bash(git add *)"
     ]
   }
 }
