@@ -88,12 +88,12 @@
                   <span>지난 기록 · {{ ex.prev }}</span>
                   <span style="color:#B4642E">{{ ex.target }}</span>
                 </div>
-                <div style="margin-top:11px;display:grid;grid-template-columns:24px 1fr 46px 58px 28px;gap:8px;align-items:center;padding:0 4px 5px;border-bottom:1.5px solid #1A1713;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.12em;color:#A39C91">
+                <div style="margin-top:11px;display:grid;grid-template-columns:24px 1fr 46px 50px 52px;gap:8px;align-items:center;padding:0 4px 5px;border-bottom:1.5px solid #1A1713;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.12em;color:#A39C91">
                   <span>SET</span>
                   <span>KG</span>
                   <span style="text-align:right">REPS</span>
                   <span style="text-align:right">VOL</span>
-                  <span></span>
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px"><span style="width:22px;text-align:center">RIR</span><span style="width:22px"></span></div>
                 </div>
                 <sc-for list="{{ ex.sets }}" as="s" hint-placeholder-count="3">
                   <div style="{{ s.rowStyle }}">
@@ -109,7 +109,10 @@
                     </div>
                     <span onClick="{{ s.tapNo }}" style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;letter-spacing:-.4px;cursor:pointer">{{ s.r }}</span>
                     <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#A39C91">{{ s.volTxt }}</span>
-                    <div onClick="{{ s.toggle }}" style="{{ s.checkStyle }}">✓</div>
+                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px">
+                      <div onClick="{{ s.tapRir }}" style="{{ s.rirStyle }}">{{ s.rirChip }}</div>
+                      <div onClick="{{ s.toggle }}" style="{{ s.checkStyle }}">✓</div>
+                    </div>
                   </div>
                   <sc-if value="{{ s.editing }}" hint-placeholder-val="{{ false }}">
                     <div style="display:flex;flex-direction:column;gap:7px;padding:9px;background:#FFF6F2;border-radius:11px;margin:2px 0 4px">
@@ -123,6 +126,12 @@
                         <span style="min-width:26px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:600">{{ s.r }}</span>
                         <div onClick="{{ s.rInc }}" style="width:28px;height:28px;border-radius:8px;background:#fff;border:1px solid #F0C6B4;display:flex;align-items:center;justify-content:center;font-size:14px;color:#C2521F;cursor:pointer">+</div>
                       </div>
+                      <div style="display:flex;align-items:center;gap:5px">
+                        <span style="flex-shrink:0;width:32px;font-size:10px;color:#8E887E">RIR</span>
+                        <sc-for list="{{ s.rirChips }}" as="chip" hint-placeholder-count="5">
+                          <div onClick="{{ chip.go }}" style="{{ chip.style }}">{{ chip.label }}</div>
+                        </sc-for>
+                      </div>
                       <div style="display:flex;gap:6px">
                         <div onClick="{{ s.up }}" style="flex:1;height:30px;border-radius:9px;background:#fff;border:1px solid #F0C6B4;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:11.5px;font-weight:600;color:#C2521F;cursor:pointer">↑ 위로</div>
                         <div onClick="{{ s.down }}" style="flex:1;height:30px;border-radius:9px;background:#fff;border:1px solid #F0C6B4;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:11.5px;font-weight:600;color:#C2521F;cursor:pointer">↓ 아래로</div>
@@ -132,7 +141,7 @@
                     </div>
                   </sc-if>
                 </sc-for>
-                <div style="display:grid;grid-template-columns:24px 1fr 46px 58px 28px;gap:8px;align-items:center;padding:8px 4px 0;border-top:1px solid #E9E4DB;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8E887E">
+                <div style="display:grid;grid-template-columns:24px 1fr 46px 50px 52px;gap:8px;align-items:center;padding:8px 4px 0;border-top:1px solid #E9E4DB;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8E887E">
                   <span></span>
                   <span>{{ ex.doneLabel }} 세트</span>
                   <span></span>
@@ -920,8 +929,9 @@ class Component extends DCLogic {
 
   weeksAgo(d, today) {
     const dow = (today.getDay() + 6) % 7;
-    const mon = new Date(today); mon.setDate(today.getDate() - dow); mon.setHours(0, 0, 0, 0);
-    return Math.floor((mon - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 6048e5) + (d >= mon ? 0 : 0);
+    const mon = new Date(today.getFullYear(), today.getMonth(), today.getDate() - dow);
+    const d0 = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    return Math.max(0, Math.ceil((mon - d0) / 6048e5));
   }
 
   // ── format ────────────────────────────────────────────
@@ -1164,7 +1174,7 @@ class Component extends DCLogic {
       '저장된 세션 수: ' + entries.length + '회' + (entries.length ? ' (' + this.md(entries[0].dt) + '~' + this.md(entries[entries.length - 1].dt) + ')' : ''),
       '최근 4주 주간 볼륨: ' + wkv.join(', '),
       Object.keys(gp).length ? '이번 주 부위별 세트: ' + Object.keys(gp).map(k => k + ' ' + gp[k]).join(', ') : '이번 주 기록 없음',
-      entries.length ? '최근 세션: ' + entries.slice(-5).map(x => this.md(x.dt) + ' ' + x.prog + ' ' + (x.vol / 1000).toFixed(1) + 't/' + x.nsets + '세트 [' + (x.ex || []).map(e => e.name + ' ' + e.sets.map(t => (t.w || 0) + '×' + t.r).join('/')).join(', ') + ']').join(' | ') : '',
+      entries.length ? '최근 세션: ' + entries.slice(-5).map(x => this.md(x.dt) + ' ' + x.prog + ' ' + (x.vol / 1000).toFixed(1) + 't/' + x.nsets + '세트 [' + (x.ex || []).map(e => e.name + ' ' + e.sets.map(t => (t.w || 0) + '×' + t.r + (t.rir != null ? 'R' + t.rir : '')).join('/')).join(', ') + ']').join(' | ') : '',
       body.length ? '체중/인바디: ' + body.slice(-6).map(b => this.md(new Date(b.d)) + ' ' + b.kg + 'kg' + (b.sm ? ' 골격근 ' + b.sm : '') + (b.fat ? ' 체지방률 ' + b.fat + '%' : '')).join(' | ') : '체중·인바디 기록 없음',
       cardio.length ? '유산소: ' + cardio.slice(-6).map(c => this.md(new Date(c.d)) + ' ' + c.type + ' ' + c.mins + '분' + (c.km ? ' ' + c.km + 'km' : '') + (c.hr ? ' ' + c.hr + 'bpm' : '')).join(' | ') : '유산소 기록 없음',
       '오늘 ' + this.PROG[S.progIdx].name + ' 진행중, 완료 ' + last.reduce((a, x) => a + x.sets.filter(t => t.done).length, 0) + '/' + last.reduce((a, x) => a + x.sets.length, 0) + '세트',
@@ -1249,6 +1259,8 @@ class Component extends DCLogic {
           const active = ei * 100 + si === firstOpen;
           const editing = S.editRow === ei + '-' + si;
           const no = t.warm ? 'W' : x.sets.slice(0, si + 1).filter(u => !u.warm).length;
+          const rirColors = { 0: { bg: '#E03A1A', fg: '#fff' }, 1: { bg: '#FFF0E8', fg: '#C2521F' }, 2: { bg: '#F4F1EA', fg: '#8E887E' }, 3: { bg: '#EEF6EF', fg: '#52875A' } };
+          const rc = t.rir != null ? rirColors[t.rir] : null;
           return {
             no: no, w: t.w || '—', r: t.r, active: active, editing: editing,
             tapNo: () => this.setState(s => ({ editRow: s.editRow === ei + '-' + si ? null : ei + '-' + si })),
@@ -1258,8 +1270,17 @@ class Component extends DCLogic {
             rDec: () => this.mutate(ei, si, u => Object.assign({}, u, { r: Math.max(1, u.r - 1) })),
             noStyle: { width: 24, height: 26, marginLeft: -3, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: t.warm ? 600 : 400, background: editing ? '#1A1713' : t.warm ? '#FFE8DE' : 'transparent', color: editing ? '#fff' : t.warm ? '#C2521F' : '#A39C91' },
             volTxt: t.done ? Math.round(t.w * t.r * (x.mult || 1)) || '–' : '–',
-            rowStyle: { display: 'grid', gridTemplateColumns: '24px 1fr 46px 58px 28px', gap: 8, alignItems: 'center', height: 38, padding: '0 4px', borderBottom: '1px solid #F4F1EA', background: active ? '#FFF6F2' : 'transparent', boxShadow: active ? 'inset 2px 0 0 #FF5A2E' : 'none', color: t.done ? '#1A1713' : '#B8B2A7' },
-            checkStyle: { width: 26, height: 26, flexShrink: 0, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 13, background: t.done ? A : '#fff', color: t.done ? '#fff' : '#DED7CB', border: t.done ? 'none' : '1px solid #E9E4DB' },
+            rowStyle: { display: 'grid', gridTemplateColumns: '24px 1fr 46px 50px 52px', gap: 8, alignItems: 'center', height: 38, padding: '0 4px', borderBottom: '1px solid #F4F1EA', background: active ? '#FFF6F2' : 'transparent', boxShadow: active ? 'inset 2px 0 0 #FF5A2E' : 'none', color: t.done ? '#1A1713' : '#B8B2A7' },
+            checkStyle: { width: 22, height: 22, flexShrink: 0, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 12, background: t.done ? A : '#fff', color: t.done ? '#fff' : '#DED7CB', border: t.done ? 'none' : '1px solid #E9E4DB' },
+            rirChip: t.rir != null ? String(t.rir) : '·',
+            rirStyle: { width: 22, height: 22, flexShrink: 0, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, background: rc ? rc.bg : 'transparent', color: rc ? rc.fg : '#C8C3BB', border: rc ? 'none' : '1px dashed #DED7CB' },
+            tapRir: () => this.mutate(ei, si, u => Object.assign({}, u, { rir: u.rir == null ? 0 : u.rir >= 3 ? null : u.rir + 1 })),
+            rirChips: [null, 0, 1, 2, 3].map(v => {
+              const sel = t.rir === v;
+              const chipRc = v != null ? rirColors[v] : null;
+              return { label: v == null ? '—' : String(v), go: () => this.mutate(ei, si, u => Object.assign({}, u, { rir: v })),
+                style: { flex: 1, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, fontFamily: "'IBM Plex Mono',monospace", cursor: 'pointer', background: sel ? (chipRc ? chipRc.bg : '#1A1713') : '#fff', color: sel ? (chipRc ? chipRc.fg : '#fff') : '#6B655C', border: '1px solid ' + (sel ? (chipRc ? chipRc.bg : '#1A1713') : '#E9E4DB') } };
+            }),
             toggle: () => this.toggle(ei, si, t.done, x.key),
             inc: () => this.mutate(ei, si, u => Object.assign({}, u, { w: +(u.w + this.EX[x.key].st).toFixed(2) })),
             dec: () => this.mutate(ei, si, u => Object.assign({}, u, { w: Math.max(this.EX[x.key].st, +(u.w - this.EX[x.key].st).toFixed(2)) }))
@@ -1327,7 +1348,7 @@ class Component extends DCLogic {
     const selSaved = S.saved[this.md(sel.dt)];
     const dayS = selSaved ? { prog: selSaved.prog + (selSaved.sub ? ' · ' + selSaved.sub : ''), vol: this.vol(selSaved.vol), nsets: selSaved.nsets, mins: selSaved.mins } : null;
     const dayExFinal = selSaved ? selSaved.ex.map(e => ({ name: e.name, pr: false,
-      sets: e.sets.map(t => (t.w || '맨몸') + '×' + t.r).join('  ·  '),
+      sets: e.sets.map(t => (t.w || '맨몸') + '×' + t.r + (t.rir != null ? ' R' + t.rir : '')).join('  ·  '),
       vol: e.sets.every(t => !t.w) ? '맨몸' : this.vol((e.mult || 1) * e.sets.reduce((a, t) => a + t.w * t.r, 0)) })) : [];
 
     // month
