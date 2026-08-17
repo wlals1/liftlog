@@ -90,7 +90,7 @@
                 </div>
                 <div style="margin-top:11px;display:grid;grid-template-columns:24px 1fr 46px 50px 52px;gap:8px;align-items:center;padding:0 4px 5px;border-bottom:1.5px solid #1A1713;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.12em;color:#A39C91">
                   <span>SET</span>
-                  <span>KG</span>
+                  <span onClick="{{ ex.toggleUnit }}" style="cursor:pointer">{{ ex.unitLabel }}</span>
                   <span style="text-align:right">REPS</span>
                   <span style="text-align:right">VOL</span>
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px"><span style="width:22px;text-align:center">RIR</span><span style="width:22px"></span></div>
@@ -438,6 +438,9 @@
                   </div>
                 </sc-if>
                 <div onClick="{{ editDay }}" style="height:44px;border-radius:13px;background:#FF5A2E;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:600;cursor:pointer">{{ editDayLabel }}</div>
+                <sc-if value="{{ dayHas }}" hint-placeholder-val="{{ true }}">
+                  <div onClick="{{ exportDay }}" style="height:44px;border-radius:13px;background:#fff;border:1px solid #EDE8DF;color:#1A1713;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:600;cursor:pointer">JSON으로 내보내기</div>
+                </sc-if>
               </div>
             </sc-if>
 
@@ -788,7 +791,8 @@ class Component extends DCLogic {
       gh: { token: '', repo: 'wlals1/liftlog-data', path: 'liftlog.json' }, ghOpen: false, ghBusy: false, ghStatus: '', ghLast: '',
       logDate: new Date().toISOString(),
       session: this.d.today.ex,
-      rest: 0, restOn: false, elapsed: 0,
+      units: {},
+      restEndAt: 0, restOn: false, elapsed: 0,
       report: null, aiLoading: false, aiError: null,
       chat: [], chatInput: '', chatLoading: false, finished: false
     };
@@ -966,7 +970,8 @@ class Component extends DCLogic {
     try {
       const s = Object.assign({ v: 2, progIdx: this.state.progIdx, session: this.state.session, bump: this.state.bump,
         elapsed: this.state.elapsed, finished: this.state.finished, saved: this.state.saved, apiKey: this.state.apiKey,
-        body: this.state.body, cardio: this.state.cardio, gh: this.state.gh, ghLast: this.state.ghLast }, patch || {});
+        body: this.state.body, cardio: this.state.cardio, gh: this.state.gh, ghLast: this.state.ghLast,
+        units: this.state.units }, patch || {});
       localStorage.setItem('liftlog.v1', JSON.stringify(s));
     } catch (e) {}
   }
@@ -989,6 +994,7 @@ class Component extends DCLogic {
         if (Array.isArray(p.cardio)) next.cardio = p.cardio;
         if (p.gh && typeof p.gh === 'object') next.gh = Object.assign({ token: '', repo: 'wlals1/liftlog-data', path: 'liftlog.json' }, p.gh);
         if (typeof p.ghLast === 'string') next.ghLast = p.ghLast;
+        if (p.units && typeof p.units === 'object') next.units = p.units;
         if (Object.keys(next).length) this.setState(next, () => { if ((this.state.gh.token || '').trim()) this.ghSync(true); });
         else if ((this.state.gh.token || '').trim()) this.ghSync(true);
       }
@@ -998,13 +1004,15 @@ class Component extends DCLogic {
       this.setState(s => {
         const started = s.session.some(x => x.sets.some(t => t.done));
         const n = { elapsed: started && !s.finished ? s.elapsed + 1 : s.elapsed };
-        if (s.restOn) { n.rest = s.rest - 1; if (n.rest <= 0) { n.restOn = false; n.rest = 0; } }
+        if (s.restOn && Date.now() >= s.restEndAt) { n.restOn = false; n.restEndAt = 0; }
         return n;
       });
       if (++this.tick % 4 === 0) this.store();
     }, 1000);
+    this._onVis = () => { if (!document.hidden) this.setState(s => ({ restOn: s.restOn && Date.now() < s.restEndAt })); };
+    document.addEventListener('visibilitychange', this._onVis);
   }
-  componentWillUnmount() { clearInterval(this.t); }
+  componentWillUnmount() { clearInterval(this.t); document.removeEventListener('visibilitychange', this._onVis); }
 
   async llm(system, messages, maxTokens) {
     if (window.claude && window.claude.complete) {
@@ -1034,7 +1042,7 @@ class Component extends DCLogic {
   toggle(ei, si, done, key) {
     this.mutate(ei, si, t => Object.assign({}, t, { done: !t.done }));
     const e = this.EX[key];
-    if (!done) this.setState({ restOn: true, rest: (e && e.rest) || this.props.restSeconds || 90 });
+    if (!done) this.setState({ restOn: true, restEndAt: Date.now() + (((e && e.rest) || this.props.restSeconds || 90) * 1000) });
   }
   addSet(ei) {
     this.setState(s => ({ session: s.session.map((x, i) => { if (i !== ei) return x; const l = x.sets[x.sets.length - 1]; return Object.assign({}, x, { sets: x.sets.concat([{ w: l.w, r: l.r, done: false }]) }); }) }));
@@ -1093,17 +1101,31 @@ class Component extends DCLogic {
     const dt = new Date(iso), md = this.md(dt), e = this.state.saved[md];
     if (e) {
       const pi = this.PROG.findIndex(p => p.name === e.prog);
-      this.setState({ logDate: iso, tab: 'today', sheet: null, finished: false, restOn: false, rest: 0,
+      this.setState({ logDate: iso, tab: 'today', sheet: null, finished: false, restOn: false, restEndAt: 0,
         progIdx: pi < 0 ? this.state.progIdx : pi, elapsed: (e.mins || 0) * 60,
         session: (e.ex || []).map(x => ({ key: x.key, name: x.name, group: x.group, mult: x.mult || 1,
-          sets: x.sets.map(t => ({ w: t.w, r: t.r, done: true })) })) }, () => this.store());
+          sets: x.sets.map(t => ({ w: t.w, r: t.r, done: true, rir: t.rir, warm: t.warm })) })) }, () => this.store());
     } else {
       const p = this.PROG[this.state.progIdx];
-      this.setState({ logDate: iso, tab: 'today', sheet: null, finished: false, restOn: false, rest: 0, elapsed: 0,
+      this.setState({ logDate: iso, tab: 'today', sheet: null, finished: false, restOn: false, restEndAt: 0, elapsed: 0,
         session: p.ex.map(([k, ns]) => this.makeEx(k, ns, false)) }, () => this.store());
     }
   }
   setGh(k, v) { this.setState(s => ({ gh: Object.assign({}, s.gh, { [k]: v }) }), () => this.store()); }
+  toggleUnit(key) {
+    this.setState(s => ({ units: Object.assign({}, s.units, { [key]: s.units[key] === 'lb' ? 'kg' : 'lb' }) }), () => this.store());
+  }
+  exportDay(entry, dt) {
+    if (!entry) return;
+    const iso = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+    const payload = JSON.stringify(Object.assign({ date: iso }, entry), null, 2);
+    const blob = new Blob([payload], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'liftlog_' + iso + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
   setBodyForm(k, v) { this.setState(s => ({ bodyForm: Object.assign({}, s.bodyForm, { [k]: v }) })); }
   setCardioForm(k, v) { this.setState(s => ({ cardioForm: Object.assign({}, s.cardioForm, { [k]: v }) })); }
   addBody() {
@@ -1153,7 +1175,7 @@ class Component extends DCLogic {
   }
   setProgram(pi) {
     const p = this.PROG[pi];
-    this.setState({ progIdx: pi, sheet: null, restOn: false, rest: 0, elapsed: 0, finished: false,
+    this.setState({ progIdx: pi, sheet: null, restOn: false, restEndAt: 0, elapsed: 0, finished: false,
       session: p.ex.map(([k, ns]) => this.makeEx(k, ns, this.state.bump)) }, () => this.store());
   }
   addExercise(k) {
@@ -1241,16 +1263,23 @@ class Component extends DCLogic {
     const curVol = S.session.reduce((a, x) => a + (x.mult || 1) * x.sets.filter(t => t.done).reduce((b, t) => b + t.w * t.r, 0), 0);
     let firstOpen = -1;
     S.session.forEach((x, i) => x.sets.forEach((t, j) => { if (firstOpen < 0 && !t.done) firstOpen = i * 100 + j; }));
-    const prevOf = k => { const l = this.lastFor(k); if (!l) return '없음 · 프로그램 무게로 시작'; return this.md(l.date) + ' · ' + (l.ex.sets[0].w || '맨몸') + (l.ex.sets[0].w ? 'kg' : '') + ' × ' + l.ex.sets.map(t => t.r).join(','); };
+    const LB = 2.2046226218488;
+    const prevOf = (k, unit) => { const l = this.lastFor(k); if (!l) return '없음 · 프로그램 무게로 시작';
+      const w0 = l.ex.sets[0].w, wtxt = !w0 ? '맨몸' : unit === 'lb' ? Math.round(w0 * LB) + 'lb' : w0 + 'kg';
+      return this.md(l.date) + ' · ' + wtxt + ' × ' + l.ex.sets.map(t => t.r).join(','); };
     const plateOn = this.props.plateHelper ?? true;
     const session = S.session.map((x, ei) => {
       const activeSet = x.sets.findIndex((t, j) => ei * 100 + j === firstOpen);
       const e = this.EX[x.key] || {}, aw = activeSet >= 0 ? x.sets[activeSet].w : 0;
+      const unit = (S.units && S.units[x.key] === 'lb') ? 'lb' : 'kg';
+      const step = unit === 'lb' ? +(5 / LB).toFixed(4) : (e.st || 2.5);
+      const prec = unit === 'lb' ? 3 : 2;
       return {
-        name: x.name, group: x.group, prev: prevOf(x.key),
+        name: x.name, group: x.group, prev: prevOf(x.key, unit),
+        unitLabel: unit.toUpperCase(), toggleUnit: () => this.toggleUnit(x.key),
         target: '목표 ' + (e.range || e.rep) + '회 · 휴식 ' + (e.rest >= 120 ? (e.rest / 60) + '분' : (e.rest || 90) + '초') + (e.note ? ' · ' + e.note : ''),
         doneLabel: x.sets.filter(t => t.done).length + '/' + x.sets.length,
-        plate: plateOn && activeSet >= 0 && e.per === '양쪽' && aw ? '양쪽 ' + aw + 'kg · 총 ' + +(aw * 2).toFixed(1) + 'kg' : plateOn && activeSet >= 0 && e.per === '편측' ? '편측 ' + (aw ? aw + 'kg' : '맨몸') + ' · 좌우 각각 ' + x.sets[activeSet].r + '회' : null,
+        plate: unit === 'lb' ? null : plateOn && activeSet >= 0 && e.per === '양쪽' && aw ? '양쪽 ' + aw + 'kg · 총 ' + +(aw * 2).toFixed(1) + 'kg' : plateOn && activeSet >= 0 && e.per === '편측' ? '편측 ' + (aw ? aw + 'kg' : '맨몸') + ' · 좌우 각각 ' + x.sets[activeSet].r + '회' : null,
         volTxt: x.sets.every(t => !t.w) ? '맨몸' : this.vol((x.mult || 1) * x.sets.filter(t => t.done).reduce((a, t) => a + t.w * t.r, 0)),
         addSet: () => this.addSet(ei),
         addWarm: () => this.addWarm(ei),
@@ -1262,7 +1291,7 @@ class Component extends DCLogic {
           const rirColors = { 0: { bg: '#E03A1A', fg: '#fff' }, 1: { bg: '#FFF0E8', fg: '#C2521F' }, 2: { bg: '#F4F1EA', fg: '#8E887E' }, 3: { bg: '#EEF6EF', fg: '#52875A' } };
           const rc = t.rir != null ? rirColors[t.rir] : null;
           return {
-            no: no, w: t.w || '—', r: t.r, active: active, editing: editing,
+            no: no, w: t.w ? (unit === 'lb' ? Math.round(t.w * LB) : t.w) : '—', r: t.r, active: active, editing: editing,
             tapNo: () => this.setState(s => ({ editRow: s.editRow === ei + '-' + si ? null : ei + '-' + si })),
             up: () => this.moveSet(ei, si, -1), down: () => this.moveSet(ei, si, 1),
             del: () => this.delSet(ei, si),
@@ -1282,8 +1311,8 @@ class Component extends DCLogic {
                 style: { flex: 1, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, fontFamily: "'IBM Plex Mono',monospace", cursor: 'pointer', background: sel ? (chipRc ? chipRc.bg : '#1A1713') : '#fff', color: sel ? (chipRc ? chipRc.fg : '#fff') : '#6B655C', border: '1px solid ' + (sel ? (chipRc ? chipRc.bg : '#1A1713') : '#E9E4DB') } };
             }),
             toggle: () => this.toggle(ei, si, t.done, x.key),
-            inc: () => this.mutate(ei, si, u => Object.assign({}, u, { w: +(u.w + this.EX[x.key].st).toFixed(2) })),
-            dec: () => this.mutate(ei, si, u => Object.assign({}, u, { w: Math.max(this.EX[x.key].st, +(u.w - this.EX[x.key].st).toFixed(2)) }))
+            inc: () => this.mutate(ei, si, u => Object.assign({}, u, { w: +(u.w + step).toFixed(prec) })),
+            dec: () => this.mutate(ei, si, u => Object.assign({}, u, { w: Math.max(step, +(u.w - step).toFixed(prec)) }))
           };
         })
       };
@@ -1348,7 +1377,7 @@ class Component extends DCLogic {
     const selSaved = S.saved[this.md(sel.dt)];
     const dayS = selSaved ? { prog: selSaved.prog + (selSaved.sub ? ' · ' + selSaved.sub : ''), vol: this.vol(selSaved.vol), nsets: selSaved.nsets, mins: selSaved.mins } : null;
     const dayExFinal = selSaved ? selSaved.ex.map(e => ({ name: e.name, pr: false,
-      sets: e.sets.map(t => (t.w || '맨몸') + '×' + t.r + (t.rir != null ? ' R' + t.rir : '')).join('  ·  '),
+      sets: e.sets.map(t => (t.warm ? 'W ' : '') + (t.w || '맨몸') + '×' + t.r + (t.rir != null ? ' R' + t.rir : '')).join('  ·  '),
       vol: e.sets.every(t => !t.w) ? '맨몸' : this.vol((e.mult || 1) * e.sets.reduce((a, t) => a + t.w * t.r, 0)) })) : [];
 
     // month
@@ -1437,7 +1466,7 @@ class Component extends DCLogic {
         if (S.finished) { if (!isToday) { this.loadDay(new Date().toISOString()); return; } this.setProgram((S.progIdx + 1) % this.PROG.length); return; }
         const md = logMd;
         const ex = S.session.map(x => ({ name: x.name, key: x.key, group: x.group, mult: x.mult || 1,
-          sets: x.sets.filter(t => t.done).map(t => ({ w: t.w, r: t.r })) })).filter(x => x.sets.length);
+          sets: x.sets.filter(t => t.done).map(t => { const o = { w: t.w, r: t.r }; if (t.rir != null) o.rir = t.rir; if (t.warm) o.warm = true; return o; }) })).filter(x => x.sets.length);
         const vol = ex.reduce((a, x) => a + x.mult * x.sets.reduce((b, t) => b + t.w * t.r, 0), 0);
         const entry = { date: logDt.toISOString(), prog: prog.name, sub: prog.sub, ex: ex, vol: vol,
           nsets: ex.reduce((a, x) => a + x.sets.length, 0), mins: Math.max(1, Math.round(S.elapsed / 60)),
@@ -1445,7 +1474,7 @@ class Component extends DCLogic {
         const saved = Object.assign({}, S.saved); saved[md] = entry;
         this.setState({ finished: true, restOn: false, saved: saved }, () => { this.store(); if ((this.state.gh.token || '').trim()) this.ghSync(true); });
       },
-      restOn: S.restOn, restLabel: this.mmss(Math.max(0, S.rest)), skipRest: () => this.setState({ restOn: false, rest: 0 }),
+      restOn: S.restOn, restLabel: this.mmss(Math.max(0, Math.ceil((S.restEndAt - Date.now()) / 1000))), skipRest: () => this.setState({ restOn: false, restEndAt: 0 }),
       ghOpen: S.ghOpen, ghBusy: S.ghBusy,
       ghToggle: () => this.setState(s => ({ ghOpen: !s.ghOpen })),
       ghHead: (S.gh.token || '').trim() ? '깃허브 동기화 켜짐' : '깃허브 동기화 설정',
@@ -1483,6 +1512,7 @@ class Component extends DCLogic {
       dayEx: dayExFinal,
       editDay: () => this.loadDay(sel.dt.toISOString()),
       editDayLabel: selSaved ? '이 날 기록 수정' : '이 날에 기록 추가',
+      exportDay: () => this.exportDay(selSaved, sel.dt),
       restNote: '이 날은 저장된 기록이 없습니다.',
 
       monthBars: mb.map((b, i) => Object.assign({}, b, { y: b.y + 20, fill: i === 5 ? A : '#E4DED2', vy: b.y + 14, vfill: i === 5 ? A : '#8E887E', v: b.v ? (b.v / 1000).toFixed(1) + 't' : '', t: moBuckets[i].m + '월' })),
