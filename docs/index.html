@@ -788,7 +788,7 @@ class Component extends DCLogic {
       progIdx: Math.max(0, this.PROG.findIndex(p => p.name === this.d.today.prog.name)),
       sheet: null, bump: true, saved: {}, apiKey: '', keyInput: '', keyOpen: false,
       body: [], cardio: [], bodyForm: { kg: '', sm: '', fat: '' }, cardioForm: { type: '러닝', mins: '', km: '', hr: '' },
-      gh: { token: '', repo: 'wlals1/liftlog-data', path: 'liftlog.json' }, ghOpen: false, ghBusy: false, ghStatus: '', ghLast: '',
+      gh: { token: '', repo: 'wlals1/liftlog-data', path: 'liftlog.json', branch: '', baseCommit: '', baseTree: '' }, ghOpen: false, ghBusy: false, ghStatus: '', ghLast: '',
       logDate: new Date().toISOString(),
       session: this.d.today.ex,
       units: {},
@@ -992,7 +992,7 @@ class Component extends DCLogic {
         if (typeof p.apiKey === 'string') next.apiKey = p.apiKey;
         if (Array.isArray(p.body)) next.body = p.body;
         if (Array.isArray(p.cardio)) next.cardio = p.cardio;
-        if (p.gh && typeof p.gh === 'object') next.gh = Object.assign({ token: '', repo: 'wlals1/liftlog-data', path: 'liftlog.json' }, p.gh);
+        if (p.gh && typeof p.gh === 'object') next.gh = Object.assign({ token: '', repo: 'wlals1/liftlog-data', path: 'liftlog.json', branch: '', baseCommit: '', baseTree: '' }, p.gh);
         if (typeof p.ghLast === 'string') next.ghLast = p.ghLast;
         if (p.units && typeof p.units === 'object') next.units = p.units;
         if (Object.keys(next).length) this.setState(next, () => { if ((this.state.gh.token || '').trim()) this.ghSync(true); });
@@ -1065,15 +1065,27 @@ class Component extends DCLogic {
     });
   }
   b64enc(str) { const b = new TextEncoder().encode(str); let s = ''; b.forEach(x => { s += String.fromCharCode(x); }); return btoa(s); }
-  b64dec(b64) { const bin = atob(String(b64).replace(/\s/g, '')); return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))); }
   ghHeaders() { return { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + (this.state.gh.token || '').trim(), 'X-GitHub-Api-Version': '2022-11-28' }; }
-  ghUrl() { const g = this.state.gh; return 'https://api.github.com/repos/' + g.repo.trim() + '/contents/' + g.path.trim().replace(/^\//, ''); }
-  mergeData(a, b) {
-    const saved = {};
-    Object.keys(a.saved || {}).forEach(k => { saved[k] = a.saved[k]; });
-    Object.keys(b.saved || {}).forEach(k => { const x = saved[k], y = b.saved[k]; saved[k] = !x || (y.nsets || 0) >= (x.nsets || 0) ? y : x; });
-    const uniq = (x, y) => { const m = {}; [].concat(x || [], y || []).forEach(i => { if (i && i.d) m[i.d] = i; }); return Object.keys(m).sort().map(k => m[k]); };
-    return { saved: saved, body: uniq(a.body, b.body), cardio: uniq(a.cardio, b.cardio) };
+  ghApi() { return 'https://api.github.com/repos/' + this.state.gh.repo.trim(); }
+  // Fetch-and-cache the base commit/tree ONCE (first sync ever on this device), then keep
+  // reusing that same SHA as the parent of every future commit. Every ghSync() call therefore
+  // creates a new commit on top of this fixed base and force-moves the branch ref onto it, so
+  // the repo's commit history never grows past base -> latest (old "latest" commits become
+  // unreachable and get garbage-collected by GitHub) — see requirement 1.
+  // Cached per-device in localStorage; if the repo is changed the cache is invalidated (setGh).
+  async ghEnsureBase() {
+    const g = this.state.gh;
+    if (g.baseCommit && g.baseTree && g.branch) return;
+    const repoRes = await fetch(this.ghApi(), { headers: this.ghHeaders(), cache: 'no-store' });
+    if (!repoRes.ok) throw new Error('저장소 확인 ' + repoRes.status + (repoRes.status === 401 ? ' · 토큰 확인' : repoRes.status === 404 ? ' · 저장소 이름 확인' : ''));
+    const branch = (await repoRes.json()).default_branch;
+    const refRes = await fetch(this.ghApi() + '/git/ref/heads/' + branch, { headers: this.ghHeaders(), cache: 'no-store' });
+    if (!refRes.ok) throw new Error('브랜치 확인 ' + refRes.status);
+    const commitSha = (await refRes.json()).object.sha;
+    const commitRes = await fetch(this.ghApi() + '/git/commits/' + commitSha, { headers: this.ghHeaders(), cache: 'no-store' });
+    if (!commitRes.ok) throw new Error('커밋 확인 ' + commitRes.status);
+    const treeSha = (await commitRes.json()).tree.sha;
+    this.setState(s => ({ gh: Object.assign({}, s.gh, { branch: branch, baseCommit: commitSha, baseTree: treeSha }) }), () => this.store());
   }
   async ghSync(silent) {
     const g = this.state.gh || {};
@@ -1081,18 +1093,41 @@ class Component extends DCLogic {
     if (this.state.ghBusy) return;
     this.setState({ ghBusy: true, ghStatus: '동기화 중…' });
     try {
-      let remote = null, sha = null;
-      const r = await fetch(this.ghUrl(), { headers: this.ghHeaders(), cache: 'no-store' });
-      if (r.ok) { const j = await r.json(); sha = j.sha; try { remote = JSON.parse(this.b64dec(j.content)); } catch (e) { remote = null; } }
-      else if (r.status !== 404) throw new Error('읽기 ' + r.status + (r.status === 401 ? ' · 토큰 확인' : r.status === 403 ? ' · 권한 확인' : ''));
+      await this.ghEnsureBase();
+      const g2 = this.state.gh;
       const local = { saved: this.state.saved, body: this.state.body, cardio: this.state.cardio };
-      const merged = remote ? this.mergeData(remote, local) : local;
-      const payload = JSON.stringify(Object.assign({ v: 2, updated: new Date().toISOString() }, merged), null, 1);
-      const put = await fetch(this.ghUrl(), { method: 'PUT', headers: Object.assign({ 'content-type': 'application/json' }, this.ghHeaders()),
-        body: JSON.stringify({ message: 'liftlog ' + new Date().toISOString().slice(0, 16).replace('T', ' '), content: this.b64enc(payload), sha: sha || undefined }) });
-      if (!put.ok) throw new Error('쓰기 ' + put.status + (put.status === 404 ? ' · 저장소 이름 확인' : put.status === 403 ? ' · 토큰 쓰기 권한 확인' : ''));
+      const payload = JSON.stringify(Object.assign({ v: 2, updated: new Date().toISOString() }, local), null, 1);
+      const jh = Object.assign({ 'content-type': 'application/json' }, this.ghHeaders());
+
+      const blobRes = await fetch(this.ghApi() + '/git/blobs', { method: 'POST', headers: jh,
+        body: JSON.stringify({ content: this.b64enc(payload), encoding: 'base64' }) });
+      if (!blobRes.ok) throw new Error('blob 생성 ' + blobRes.status + (blobRes.status === 403 ? ' · 토큰 쓰기 권한 확인' : ''));
+      const blobSha = (await blobRes.json()).sha;
+
+      const treeRes = await fetch(this.ghApi() + '/git/trees', { method: 'POST', headers: jh,
+        body: JSON.stringify({ base_tree: g2.baseTree, tree: [{ path: g2.path.trim().replace(/^\//, ''), mode: '100644', type: 'blob', sha: blobSha }] }) });
+      if (!treeRes.ok) throw new Error('tree 생성 ' + treeRes.status);
+      const treeSha = (await treeRes.json()).sha;
+
+      // Parent is always the FIXED base commit (never the previous sync's commit) — this is
+      // what keeps history from growing. It also means this commit has no relation to whatever
+      // the branch currently points to.
+      const commitRes = await fetch(this.ghApi() + '/git/commits', { method: 'POST', headers: jh,
+        body: JSON.stringify({ message: 'liftlog ' + new Date().toISOString().slice(0, 16).replace('T', ' '), tree: treeSha, parents: [g2.baseCommit] }) });
+      if (!commitRes.ok) throw new Error('commit 생성 ' + commitRes.status);
+      const newCommitSha = (await commitRes.json()).sha;
+
+      // force:true — blind overwrite, no sha-based optimistic-concurrency check like the old
+      // Contents-API PUT had, and (per this sync's design) no read-merge beforehand either.
+      // If two devices sync within moments of each other, whichever PATCH lands second wins
+      // outright and silently discards the other device's data — there is no conflict
+      // detection or merge safety net at all here.
+      const refPatch = await fetch(this.ghApi() + '/git/refs/heads/' + g2.branch, { method: 'PATCH', headers: jh,
+        body: JSON.stringify({ sha: newCommitSha, force: true }) });
+      if (!refPatch.ok) throw new Error('ref 업데이트 ' + refPatch.status + (refPatch.status === 404 ? ' · 브랜치 확인' : refPatch.status === 403 ? ' · 토큰 쓰기 권한 확인' : ''));
+
       const t = new Date().toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-      this.setState({ saved: merged.saved, body: merged.body, cardio: merged.cardio, ghBusy: false, ghLast: t, ghStatus: '동기화 완료 · ' + t }, () => this.store());
+      this.setState({ ghBusy: false, ghLast: t, ghStatus: '동기화 완료 · ' + t }, () => this.store());
     } catch (e) {
       this.setState({ ghBusy: false, ghStatus: '실패: ' + (e.message || '네트워크 오류') });
     }
@@ -1111,7 +1146,13 @@ class Component extends DCLogic {
         session: p.ex.map(([k, ns]) => this.makeEx(k, ns, false)) }, () => this.store());
     }
   }
-  setGh(k, v) { this.setState(s => ({ gh: Object.assign({}, s.gh, { [k]: v }) }), () => this.store()); }
+  setGh(k, v) {
+    this.setState(s => {
+      const gh = Object.assign({}, s.gh, { [k]: v });
+      if (k === 'repo') Object.assign(gh, { branch: '', baseCommit: '', baseTree: '' });
+      return { gh: gh };
+    }, () => this.store());
+  }
   toggleUnit(key) {
     this.setState(s => ({ units: Object.assign({}, s.units, { [key]: s.units[key] === 'lb' ? 'kg' : 'lb' }) }), () => this.store());
   }
