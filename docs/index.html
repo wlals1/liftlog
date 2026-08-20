@@ -119,7 +119,7 @@
                       <div style="display:flex;align-items:center;gap:7px">
                         <span style="flex-shrink:0;width:28px;font-size:10.5px;color:#8E887E">무게</span>
                         <div onClick="{{ s.dec }}" style="width:28px;height:28px;border-radius:8px;background:#fff;border:1px solid #F0C6B4;display:flex;align-items:center;justify-content:center;font-size:14px;color:#C2521F;cursor:pointer">−</div>
-                        <span style="min-width:46px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:600">{{ s.w }}</span>
+                        <input value="{{ s.wInput }}" onChange="{{ s.onWChange }}" onBlur="{{ s.onWBlur }}" onKeyDown="{{ s.onWKeyDown }}" inputMode="decimal" style="width:52px;height:28px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:600;border:1px solid #F0C6B4;border-radius:8px;background:#fff;color:#1A1713;outline:none;padding:0" />
                         <div onClick="{{ s.inc }}" style="width:28px;height:28px;border-radius:8px;background:#fff;border:1px solid #F0C6B4;display:flex;align-items:center;justify-content:center;font-size:14px;color:#C2521F;cursor:pointer">+</div>
                         <span style="flex-shrink:0;width:28px;margin-left:6px;font-size:10.5px;color:#8E887E">횟수</span>
                         <div onClick="{{ s.rDec }}" style="width:28px;height:28px;border-radius:8px;background:#fff;border:1px solid #F0C6B4;display:flex;align-items:center;justify-content:center;font-size:14px;color:#C2521F;cursor:pointer">−</div>
@@ -152,8 +152,9 @@
                   <div style="margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#B4642E;background:#FFF3EE;border-radius:8px;padding:6px 8px">{{ ex.plate }}</div>
                 </sc-if>
                 <div style="margin-top:9px;display:flex;gap:6px">
-                  <div onClick="{{ ex.addWarm }}" style="flex:1;height:32px;border:1px dashed #E0A88F;border-radius:10px;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:11.5px;font-weight:600;color:#C2521F;background:#FFF6F2;cursor:pointer">웜업 세트 · 맨 위</div>
+                  <div onClick="{{ ex.addWarm }}" style="flex:1;height:32px;border:1px dashed #E0A88F;border-radius:10px;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:11.5px;font-weight:600;color:#C2521F;background:#FFF6F2;cursor:pointer">웜업 · 맨 위</div>
                   <div onClick="{{ ex.addSet }}" style="flex:1;height:32px;border:1px dashed #DED7CB;border-radius:10px;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:11.5px;color:#8E887E;cursor:pointer">세트 추가</div>
+                  <div onClick="{{ ex.addDrop }}" style="flex:1;height:32px;border:1px dashed #B9C4EB;border-radius:10px;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:11.5px;font-weight:600;color:#3A5FC2;background:#F1F4FF;cursor:pointer">드랍 · 맨 아래</div>
                 </div>
               </div>
             </sc-for>
@@ -773,7 +774,29 @@ class Component extends DCLogic {
       dbrdl:      { n: '덤벨 RDL', g: '하체', base: 12.5, gain: 0.25, st: 2.5, rep: 11, range: '10~12', rest: 120, per: '양쪽', mult: 2 },
       bulgarian:  { n: '불가리안 스플릿 스쿼트', g: '하체', base: 0, gain: 0, st: 2.5, rep: 8, range: '편측 8', rest: 90, per: '편측', mult: 2, note: '맨몸~5kg' },
       pronecurl:  { n: '프론 레그컬', g: '하체', base: 31.7, gain: 0.2, st: 4.5, rep: 13, range: '12~15', rest: 90 },
-      calf:       { n: '카프레이즈', g: '종아리', base: 60, gain: 0.2, st: 5, rep: 17, range: '15~20', rest: 60 }
+      calf:       { n: '카프레이즈', g: '종아리', base: 60, gain: 0.2, st: 5, rep: 17, range: '15~20', rest: 60 },
+      benchpress: { n: '바벨 벤치프레스', g: '가슴', base: 20, gain: 0, st: 2.5, rep: 8, range: '6~10', rest: 150 },
+      inclinedb:  { n: '덤벨 인클라인 프레스', g: '가슴', base: 12.5, gain: 0, st: 2.5, rep: 10, range: '8~12', rest: 120, per: '양쪽', mult: 2 },
+      cablecross: { n: '케이블 크로스오버', g: '가슴', base: 10, gain: 0, st: 2.5, rep: 13, range: '12~15', rest: 90, per: '양쪽', mult: 2 },
+      dip:        { n: '딥스', g: '가슴', base: 0, gain: 0, st: 2.5, rep: 10, range: '8~12', rest: 120, note: '맨몸' },
+      deadlift:   { n: '데드리프트', g: '등', base: 40, gain: 0, st: 5, rep: 6, range: '5~8', rest: 180 },
+      barbellrow: { n: '바벨로우', g: '등', base: 20, gain: 0, st: 2.5, rep: 10, range: '8~12', rest: 120 },
+      pullup:     { n: '풀업', g: '등', base: 0, gain: 0, st: 2.5, rep: 8, range: '6~10', rest: 120, note: '맨몸' },
+      cablerow:   { n: '케이블 로우', g: '등', base: 40, gain: 0, st: 5, rep: 11, range: '10~12', rest: 90 },
+      ohp:        { n: '오버헤드 프레스', g: '어깨', base: 15, gain: 0, st: 2.5, rep: 8, range: '6~10', rest: 120 },
+      facepull:   { n: '페이스풀', g: '어깨', base: 15, gain: 0, st: 2.5, rep: 15, range: '12~15', rest: 60 },
+      uprightrow: { n: '업라이트로우', g: '어깨', base: 15, gain: 0, st: 2.5, rep: 12, range: '10~12', rest: 90 },
+      squat:      { n: '바벨 스쿼트', g: '하체', base: 20, gain: 0, st: 2.5, rep: 8, range: '6~10', rest: 180 },
+      smithsquat: { n: '스미스 스쿼트', g: '하체', base: 20, gain: 0, st: 5, rep: 10, range: '8~12', rest: 150 },
+      legext:     { n: '레그익스텐션', g: '하체', base: 30, gain: 0, st: 5, rep: 13, range: '12~15', rest: 90 },
+      hipthrust:  { n: '힙쓰러스트', g: '하체', base: 20, gain: 0, st: 5, rep: 10, range: '8~12', rest: 120 },
+      lunge:      { n: '런지', g: '하체', base: 0, gain: 0, st: 2.5, rep: 10, range: '편측 10', rest: 90, per: '편측', mult: 2, note: '맨몸~덤벨' },
+      barbellcurl:{ n: '바벨컬', g: '이두', base: 10, gain: 0, st: 2.5, rep: 10, range: '8~12', rest: 60 },
+      hammercurl: { n: '해머컬', g: '이두', base: 5, gain: 0, st: 2.5, rep: 12, range: '10~12', rest: 60, per: '양쪽', mult: 2 },
+      tricepext:  { n: '오버헤드 트라이셉 익스텐션', g: '삼두', base: 10, gain: 0, st: 2.5, rep: 12, range: '10~12', rest: 60 },
+      skullcrusher:{ n: '스컬크러셔', g: '삼두', base: 10, gain: 0, st: 2.5, rep: 10, range: '8~12', rest: 60 },
+      crunch:     { n: '크런치 머신', g: '복근', base: 20, gain: 0, st: 5, rep: 17, range: '15~20', rest: 45 },
+      legraise:   { n: '레그레이즈', g: '복근', base: 0, gain: 0, st: 2.5, rep: 15, range: '12~15', rest: 45, note: '맨몸' }
     };
     this.PROG = [
       { name: '상체 A', sub: '가슴 · 등 · 어깨 · 삼두', ex: [['smithinc', 4], ['seatedrow', 4], ['pecdeck', 3], ['latpull', 3], ['sidelat', 3], ['tripush', 2]] },
@@ -782,6 +805,7 @@ class Component extends DCLogic {
       { name: '하체 B', sub: '레그프레스 중심 · 햄스트링', ex: [['legpress', 4], ['dbrdl', 3], ['bulgarian', 3], ['pronecurl', 3], ['calf', 3]] }
     ];
     this.DW = ['일', '월', '화', '수', '목', '금', '토'];
+    this.LB = 2.2046226218488;
     this.d = this.emptyData();
     this.state = {
       tab: 'today', range: 'week', dayOffset: 0,
@@ -791,8 +815,8 @@ class Component extends DCLogic {
       gh: { token: '', repo: 'wlals1/liftlog-data', path: 'liftlog.json', branch: '', baseCommit: '', baseTree: '' }, ghOpen: false, ghBusy: false, ghStatus: '', ghLast: '',
       logDate: new Date().toISOString(),
       session: this.d.today.ex,
-      units: {},
-      restEndAt: 0, restOn: false, elapsed: 0,
+      units: {}, wDraft: {},
+      restEndAt: 0, restOn: false, startedAt: null, finishedAt: null,
       report: null, aiLoading: false, aiError: null,
       chat: [], chatInput: '', chatLoading: false, finished: false
     };
@@ -944,6 +968,14 @@ class Component extends DCLogic {
   md(d) { return (d.getMonth() + 1) + '/' + d.getDate(); }
   mmss(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
   hm(m) { return Math.floor(m / 60) + 'h ' + (m % 60) + 'm'; }
+  // wall-clock diff, not a tick counter — stays correct even if setInterval is throttled/paused
+  // while the screen is locked or the tab is backgrounded (common between sets at the gym).
+  liveElapsed() {
+    const s = this.state;
+    if (!s.startedAt) return 0;
+    const end = s.finished ? (s.finishedAt || s.startedAt) : Date.now();
+    return Math.max(0, Math.floor((end - s.startedAt) / 1000));
+  }
   sign(v, u, dp) { const n = +v; return (n > 0 ? '+' : '') + n.toFixed(dp === undefined ? 1 : dp) + (u || ''); }
 
   plates(total) {
@@ -969,7 +1001,7 @@ class Component extends DCLogic {
   store(patch) {
     try {
       const s = Object.assign({ v: 2, progIdx: this.state.progIdx, session: this.state.session, bump: this.state.bump,
-        elapsed: this.state.elapsed, finished: this.state.finished, saved: this.state.saved, apiKey: this.state.apiKey,
+        startedAt: this.state.startedAt, finishedAt: this.state.finishedAt, finished: this.state.finished, saved: this.state.saved, apiKey: this.state.apiKey,
         body: this.state.body, cardio: this.state.cardio, gh: this.state.gh, ghLast: this.state.ghLast,
         units: this.state.units }, patch || {});
       localStorage.setItem('liftlog.v1', JSON.stringify(s));
@@ -984,9 +1016,11 @@ class Component extends DCLogic {
         const stale = !((p.v || 1) >= 2) && !Object.keys(p.saved || {}).length;
         if (typeof p.progIdx === 'number' && this.PROG[p.progIdx]) next.progIdx = p.progIdx;
         if (!stale && Array.isArray(p.session) && p.session.length && p.session[0].sets) next.session = p.session;
-        if (stale) { next.session = this.PROG[next.progIdx || 0].ex.map(([k, ns]) => this.makeEx(k, ns, false)); next.elapsed = 0; }
+        if (stale) { next.session = this.PROG[next.progIdx || 0].ex.map(([k, ns]) => this.makeEx(k, ns, false)); next.startedAt = null; next.finishedAt = null; }
         if (typeof p.bump === 'boolean') next.bump = p.bump;
-        if (!stale && typeof p.elapsed === 'number') next.elapsed = p.elapsed;
+        if (!stale && typeof p.startedAt === 'number') next.startedAt = p.startedAt;
+        else if (!stale && typeof p.elapsed === 'number' && p.elapsed > 0) next.startedAt = Date.now() - p.elapsed * 1000;
+        if (!stale && typeof p.finishedAt === 'number') next.finishedAt = p.finishedAt;
         if (typeof p.finished === 'boolean') next.finished = p.finished;
         if (p.saved && typeof p.saved === 'object') next.saved = p.saved;
         if (typeof p.apiKey === 'string') next.apiKey = p.apiKey;
@@ -1002,9 +1036,9 @@ class Component extends DCLogic {
     this.tick = 0;
     this.t = setInterval(() => {
       this.setState(s => {
-        const started = s.session.some(x => x.sets.some(t => t.done));
-        const n = { elapsed: started && !s.finished ? s.elapsed + 1 : s.elapsed };
+        const n = {};
         if (s.restOn && Date.now() >= s.restEndAt) { n.restOn = false; n.restEndAt = 0; }
+        if (s.startedAt && !s.finished) n._tick = (s._tick || 0) + 1;
         return n;
       });
       if (++this.tick % 4 === 0) this.store();
@@ -1039,10 +1073,31 @@ class Component extends DCLogic {
       return { session: session };
     });
   }
+  setWDraft(ei, si, v) {
+    const key = ei + '-' + si;
+    this.setState(s => ({ wDraft: Object.assign({}, s.wDraft, { [key]: v }) }));
+  }
+  clearWDraft(ei, si) {
+    const key = ei + '-' + si;
+    this.setState(s => { const d = Object.assign({}, s.wDraft); delete d[key]; return { wDraft: d }; });
+  }
+  commitWDraft(ei, si, unit) {
+    const key = ei + '-' + si;
+    const raw = this.state.wDraft[key];
+    if (raw !== undefined) {
+      const n = parseFloat(String(raw).replace(',', '.'));
+      if (!isNaN(n) && n >= 0) {
+        const kgVal = +(Math.max(0, unit === 'lb' ? n / this.LB : n)).toFixed(2);
+        this.mutate(ei, si, u => Object.assign({}, u, { w: kgVal }));
+      }
+      this.setState(s => { const d = Object.assign({}, s.wDraft); delete d[key]; return { wDraft: d }; });
+    }
+  }
   toggle(ei, si, done, key) {
     this.mutate(ei, si, t => Object.assign({}, t, { done: !t.done }));
     const e = this.EX[key];
-    if (!done) this.setState({ restOn: true, restEndAt: Date.now() + (((e && e.rest) || this.props.restSeconds || 90) * 1000) });
+    if (!done) this.setState(s => ({ restOn: true, restEndAt: Date.now() + (((e && e.rest) || this.props.restSeconds || 90) * 1000),
+      startedAt: s.startedAt || Date.now() }));
   }
   addSet(ei) {
     this.setState(s => ({ session: s.session.map((x, i) => { if (i !== ei) return x; const l = x.sets[x.sets.length - 1]; return Object.assign({}, x, { sets: x.sets.concat([{ w: l.w, r: l.r, done: false }]) }); }) }));
@@ -1054,6 +1109,15 @@ class Component extends DCLogic {
       const w = top.w ? this.snap(top.w * 0.5, e) : 0;
       return Object.assign({}, x, { sets: [{ w: w, r: Math.min(15, (top.r || 10) + 3), done: false, warm: true }].concat(x.sets) });
     }) }));
+  }
+  addDrop(ei) {
+    this.setState(s => {
+      const x = s.session[ei], newIdx = x.sets.length;
+      const e = this.EX[x.key] || { st: 2.5, base: 0 }, last = x.sets[x.sets.length - 1] || { w: 0, r: 10 };
+      const w = last.w ? this.snap(last.w * 0.75, e) : 0;
+      const nx = Object.assign({}, x, { sets: x.sets.concat([{ w: w, r: last.r || 10, done: false, drop: true }]) });
+      return { editRow: ei + '-' + newIdx, session: s.session.map((y, i) => i === ei ? nx : y) };
+    });
   }
   moveSet(ei, si, dir) {
     const j = si + dir;
@@ -1137,12 +1201,12 @@ class Component extends DCLogic {
     if (e) {
       const pi = this.PROG.findIndex(p => p.name === e.prog);
       this.setState({ logDate: iso, tab: 'today', sheet: null, finished: false, restOn: false, restEndAt: 0,
-        progIdx: pi < 0 ? this.state.progIdx : pi, elapsed: (e.mins || 0) * 60,
+        progIdx: pi < 0 ? this.state.progIdx : pi, startedAt: Date.now() - (e.mins || 0) * 60000, finishedAt: null,
         session: (e.ex || []).map(x => ({ key: x.key, name: x.name, group: x.group, mult: x.mult || 1,
-          sets: x.sets.map(t => ({ w: t.w, r: t.r, done: true, rir: t.rir, warm: t.warm })) })) }, () => this.store());
+          sets: x.sets.map(t => ({ w: t.w, r: t.r, done: true, rir: t.rir, warm: t.warm, drop: t.drop })) })) }, () => this.store());
     } else {
       const p = this.PROG[this.state.progIdx];
-      this.setState({ logDate: iso, tab: 'today', sheet: null, finished: false, restOn: false, restEndAt: 0, elapsed: 0,
+      this.setState({ logDate: iso, tab: 'today', sheet: null, finished: false, restOn: false, restEndAt: 0, startedAt: null, finishedAt: null,
         session: p.ex.map(([k, ns]) => this.makeEx(k, ns, false)) }, () => this.store());
     }
   }
@@ -1216,7 +1280,7 @@ class Component extends DCLogic {
   }
   setProgram(pi) {
     const p = this.PROG[pi];
-    this.setState({ progIdx: pi, sheet: null, restOn: false, restEndAt: 0, elapsed: 0, finished: false,
+    this.setState({ progIdx: pi, sheet: null, restOn: false, restEndAt: 0, startedAt: null, finishedAt: null, finished: false,
       session: p.ex.map(([k, ns]) => this.makeEx(k, ns, this.state.bump)) }, () => this.store());
   }
   addExercise(k) {
@@ -1324,21 +1388,29 @@ class Component extends DCLogic {
         volTxt: x.sets.every(t => !t.w) ? '맨몸' : this.vol((x.mult || 1) * x.sets.filter(t => t.done).reduce((a, t) => a + t.w * t.r, 0)),
         addSet: () => this.addSet(ei),
         addWarm: () => this.addWarm(ei),
+        addDrop: () => this.addDrop(ei),
         remove: () => this.removeExercise(ei),
         sets: (() => { let n = 0; return x.sets; })().map((t, si) => {
           const active = ei * 100 + si === firstOpen;
           const editing = S.editRow === ei + '-' + si;
-          const no = t.warm ? 'W' : x.sets.slice(0, si + 1).filter(u => !u.warm).length;
+          const no = t.warm ? 'W' : t.drop ? 'D' : x.sets.slice(0, si + 1).filter(u => !u.warm && !u.drop).length;
           const rirColors = { 0: { bg: '#E03A1A', fg: '#fff' }, 1: { bg: '#FFF0E8', fg: '#C2521F' }, 2: { bg: '#F4F1EA', fg: '#8E887E' }, 3: { bg: '#EEF6EF', fg: '#52875A' } };
           const rc = t.rir != null ? rirColors[t.rir] : null;
+          const wKey = ei + '-' + si;
+          const wDraftVal = S.wDraft[wKey];
+          const wDisplay = unit === 'lb' ? Math.round(t.w * LB) : t.w;
           return {
             no: no, w: t.w ? (unit === 'lb' ? Math.round(t.w * LB) : t.w) : '—', r: t.r, active: active, editing: editing,
+            wInput: wDraftVal !== undefined ? wDraftVal : String(wDisplay),
+            onWChange: e => this.setWDraft(ei, si, e.target.value),
+            onWBlur: () => this.commitWDraft(ei, si, unit),
+            onWKeyDown: e => { if (e.key === 'Enter') e.target.blur(); },
             tapNo: () => this.setState(s => ({ editRow: s.editRow === ei + '-' + si ? null : ei + '-' + si })),
             up: () => this.moveSet(ei, si, -1), down: () => this.moveSet(ei, si, 1),
             del: () => this.delSet(ei, si),
             rInc: () => this.mutate(ei, si, u => Object.assign({}, u, { r: Math.min(30, u.r + 1) })),
             rDec: () => this.mutate(ei, si, u => Object.assign({}, u, { r: Math.max(1, u.r - 1) })),
-            noStyle: { width: 24, height: 26, marginLeft: -3, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: t.warm ? 600 : 400, background: editing ? '#1A1713' : t.warm ? '#FFE8DE' : 'transparent', color: editing ? '#fff' : t.warm ? '#C2521F' : '#A39C91' },
+            noStyle: { width: 24, height: 26, marginLeft: -3, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: t.warm || t.drop ? 600 : 400, background: editing ? '#1A1713' : t.warm ? '#FFE8DE' : t.drop ? '#E8ECFF' : 'transparent', color: editing ? '#fff' : t.warm ? '#C2521F' : t.drop ? '#3A5FC2' : '#A39C91' },
             volTxt: t.done ? Math.round(t.w * t.r * (x.mult || 1)) || '–' : '–',
             rowStyle: { display: 'grid', gridTemplateColumns: '24px 1fr 46px 50px 52px', gap: 8, alignItems: 'center', height: 38, padding: '0 4px', borderBottom: '1px solid #F4F1EA', background: active ? '#FFF6F2' : 'transparent', boxShadow: active ? 'inset 2px 0 0 #FF5A2E' : 'none', color: t.done ? '#1A1713' : '#B8B2A7' },
             checkStyle: { width: 22, height: 22, flexShrink: 0, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 12, background: t.done ? A : '#fff', color: t.done ? '#fff' : '#DED7CB', border: t.done ? 'none' : '1px solid #E9E4DB' },
@@ -1352,8 +1424,8 @@ class Component extends DCLogic {
                 style: { flex: 1, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, fontFamily: "'IBM Plex Mono',monospace", cursor: 'pointer', background: sel ? (chipRc ? chipRc.bg : '#1A1713') : '#fff', color: sel ? (chipRc ? chipRc.fg : '#fff') : '#6B655C', border: '1px solid ' + (sel ? (chipRc ? chipRc.bg : '#1A1713') : '#E9E4DB') } };
             }),
             toggle: () => this.toggle(ei, si, t.done, x.key),
-            inc: () => this.mutate(ei, si, u => Object.assign({}, u, { w: +(u.w + step).toFixed(prec) })),
-            dec: () => this.mutate(ei, si, u => Object.assign({}, u, { w: Math.max(step, +(u.w - step).toFixed(prec)) }))
+            inc: () => { this.clearWDraft(ei, si); this.mutate(ei, si, u => Object.assign({}, u, { w: +(u.w + step).toFixed(prec) })); },
+            dec: () => { this.clearWDraft(ei, si); this.mutate(ei, si, u => Object.assign({}, u, { w: Math.max(step, +(u.w - step).toFixed(prec)) })); }
           };
         })
       };
@@ -1487,7 +1559,7 @@ class Component extends DCLogic {
       volLabel: this.vol(curVol) + ' · 예상 ' + this.vol(projected),
       progBarStyle: { width: (allN ? doneN / allN * 100 : 0) + '%', height: '100%', borderRadius: 3, background: '#fff', transition: 'width .25s' },
       session: session,
-      sVol: this.vol(curVol), sSets: doneN + '/' + allN, sTime: this.mmss(S.elapsed),
+      sVol: this.vol(curVol), sSets: doneN + '/' + allN, sTime: this.mmss(this.liveElapsed()),
       openProgram: () => this.setState({ sheet: 'program' }),
       openExercise: () => this.setState({ sheet: 'exercise' }),
       closeSheet: () => this.setState({ sheet: null }),
@@ -1507,13 +1579,14 @@ class Component extends DCLogic {
         if (S.finished) { if (!isToday) { this.loadDay(new Date().toISOString()); return; } this.setProgram((S.progIdx + 1) % this.PROG.length); return; }
         const md = logMd;
         const ex = S.session.map(x => ({ name: x.name, key: x.key, group: x.group, mult: x.mult || 1,
-          sets: x.sets.filter(t => t.done).map(t => { const o = { w: t.w, r: t.r }; if (t.rir != null) o.rir = t.rir; if (t.warm) o.warm = true; return o; }) })).filter(x => x.sets.length);
+          sets: x.sets.filter(t => t.done).map(t => { const o = { w: t.w, r: t.r }; if (t.rir != null) o.rir = t.rir; if (t.warm) o.warm = true; if (t.drop) o.drop = true; return o; }) })).filter(x => x.sets.length);
         const vol = ex.reduce((a, x) => a + x.mult * x.sets.reduce((b, t) => b + t.w * t.r, 0), 0);
+        const finishedAt = Date.now();
         const entry = { date: logDt.toISOString(), prog: prog.name, sub: prog.sub, ex: ex, vol: vol,
-          nsets: ex.reduce((a, x) => a + x.sets.length, 0), mins: Math.max(1, Math.round(S.elapsed / 60)),
+          nsets: ex.reduce((a, x) => a + x.sets.length, 0), mins: Math.max(1, Math.round((S.startedAt ? (finishedAt - S.startedAt) / 1000 : 0) / 60)),
           at: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) };
         const saved = Object.assign({}, S.saved); saved[md] = entry;
-        this.setState({ finished: true, restOn: false, saved: saved }, () => { this.store(); if ((this.state.gh.token || '').trim()) this.ghSync(true); });
+        this.setState({ finished: true, finishedAt: finishedAt, restOn: false, saved: saved }, () => { this.store(); if ((this.state.gh.token || '').trim()) this.ghSync(true); });
       },
       restOn: S.restOn, restLabel: this.mmss(Math.max(0, Math.ceil((S.restEndAt - Date.now()) / 1000))), skipRest: () => this.setState({ restOn: false, restEndAt: 0 }),
       ghOpen: S.ghOpen, ghBusy: S.ghBusy,

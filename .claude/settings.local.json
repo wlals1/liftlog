@@ -7,7 +7,16 @@
       "Bash(wsl *)",
       "PowerShell(wsl -d Ubuntu -e bash -c \"cd ~/liftlog && git push origin main\")",
       "Bash(git config *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "PowerShell(Get-Process *)",
+      "Bash(node -e ' *)",
+      "Bash(node --check /tmp/liftlog_check.js)",
+      "Bash(node *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8791/index.html)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(taskkill //F //FI \"WINDOWTITLE eq http.server*\")"
     ]
   }
 }
