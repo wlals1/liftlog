@@ -1129,8 +1129,18 @@ class Component extends DCLogic {
     });
   }
   b64enc(str) { const b = new TextEncoder().encode(str); let s = ''; b.forEach(x => { s += String.fromCharCode(x); }); return btoa(s); }
+  b64dec(b64) { const bin = atob(String(b64).replace(/\s/g, '')); return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))); }
   ghHeaders() { return { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + (this.state.gh.token || '').trim(), 'X-GitHub-Api-Version': '2022-11-28' }; }
   ghApi() { return 'https://api.github.com/repos/' + this.state.gh.repo.trim(); }
+  // Per-day last-writer-wins merge so a sync never discards another device's newer data —
+  // see ghSync(). Restored from the pre-Git-Data-API sync (commit 2995031).
+  mergeData(a, b) {
+    const saved = {};
+    Object.keys(a.saved || {}).forEach(k => { saved[k] = a.saved[k]; });
+    Object.keys(b.saved || {}).forEach(k => { const x = saved[k], y = b.saved[k]; saved[k] = !x || (y.nsets || 0) >= (x.nsets || 0) ? y : x; });
+    const uniq = (x, y) => { const m = {}; [].concat(x || [], y || []).forEach(i => { if (i && i.d) m[i.d] = i; }); return Object.keys(m).sort().map(k => m[k]); };
+    return { saved: saved, body: uniq(a.body, b.body), cardio: uniq(a.cardio, b.cardio) };
+  }
   // Fetch-and-cache the base commit/tree ONCE (first sync ever on this device), then keep
   // reusing that same SHA as the parent of every future commit. Every ghSync() call therefore
   // creates a new commit on top of this fixed base and force-moves the branch ref onto it, so
@@ -1159,8 +1169,19 @@ class Component extends DCLogic {
     try {
       await this.ghEnsureBase();
       const g2 = this.state.gh;
+
+      // Read the CURRENT remote file (not the cached base — that only pins the flat-history
+      // parent) and merge it with local before overwriting, so a sync can't discard whatever
+      // another device already pushed.
+      let remote = null;
+      const getRes = await fetch(this.ghApi() + '/contents/' + g2.path.trim().replace(/^\//, '') + '?ref=' + g2.branch,
+        { headers: this.ghHeaders(), cache: 'no-store' });
+      if (getRes.ok) { try { remote = JSON.parse(this.b64dec((await getRes.json()).content)); } catch (e) { remote = null; } }
+      else if (getRes.status !== 404) throw new Error('읽기 ' + getRes.status + (getRes.status === 401 ? ' · 토큰 확인' : ''));
+
       const local = { saved: this.state.saved, body: this.state.body, cardio: this.state.cardio };
-      const payload = JSON.stringify(Object.assign({ v: 2, updated: new Date().toISOString() }, local), null, 1);
+      const merged = remote ? this.mergeData(remote, local) : local;
+      const payload = JSON.stringify(Object.assign({ v: 2, updated: new Date().toISOString() }, merged), null, 1);
       const jh = Object.assign({ 'content-type': 'application/json' }, this.ghHeaders());
 
       const blobRes = await fetch(this.ghApi() + '/git/blobs', { method: 'POST', headers: jh,
@@ -1181,17 +1202,15 @@ class Component extends DCLogic {
       if (!commitRes.ok) throw new Error('commit 생성 ' + commitRes.status);
       const newCommitSha = (await commitRes.json()).sha;
 
-      // force:true — blind overwrite, no sha-based optimistic-concurrency check like the old
-      // Contents-API PUT had, and (per this sync's design) no read-merge beforehand either.
-      // If two devices sync within moments of each other, whichever PATCH lands second wins
-      // outright and silently discards the other device's data — there is no conflict
-      // detection or merge safety net at all here.
+      // force:true because the branch ref never points at our fixed base commit (that's what
+      // keeps history flat) — but we already merged with the latest remote content above, so
+      // this isn't a blind overwrite of someone else's data.
       const refPatch = await fetch(this.ghApi() + '/git/refs/heads/' + g2.branch, { method: 'PATCH', headers: jh,
         body: JSON.stringify({ sha: newCommitSha, force: true }) });
       if (!refPatch.ok) throw new Error('ref 업데이트 ' + refPatch.status + (refPatch.status === 404 ? ' · 브랜치 확인' : refPatch.status === 403 ? ' · 토큰 쓰기 권한 확인' : ''));
 
       const t = new Date().toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-      this.setState({ ghBusy: false, ghLast: t, ghStatus: '동기화 완료 · ' + t }, () => this.store());
+      this.setState({ saved: merged.saved, body: merged.body, cardio: merged.cardio, ghBusy: false, ghLast: t, ghStatus: '동기화 완료 · ' + t }, () => this.store());
     } catch (e) {
       this.setState({ ghBusy: false, ghStatus: '실패: ' + (e.message || '네트워크 오류') });
     }
