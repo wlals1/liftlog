@@ -81,6 +81,8 @@
                   </div>
                   <div style="flex-shrink:0;display:flex;align-items:center;gap:8px">
                     <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#A39C91">{{ ex.doneLabel }}</span>
+                    <span onClick="{{ ex.moveUp }}" style="{{ ex.upStyle }}">▲</span>
+                    <span onClick="{{ ex.moveDown }}" style="{{ ex.downStyle }}">▼</span>
                     <span onClick="{{ ex.remove }}" style="width:22px;height:22px;border-radius:7px;background:#F4F1EA;color:#A39C91;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer">✕</span>
                   </div>
                 </div>
@@ -722,6 +724,18 @@
                 </div>
               </div>
             </sc-if>
+            <sc-if value="{{ isExerciseSheet }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid #F1EDE5">
+                <div style="font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#A39C91">목록에 없는 종목 직접 추가</div>
+                <div style="margin-top:8px;display:grid;grid-template-columns:2fr 1fr 1fr;gap:6px">
+                  <input value="{{ customName }}" onChange="{{ onCustomName }}" placeholder="종목명" style="height:40px;border:1px solid #E9E4DB;border-radius:11px;background:#FAF8F5;padding:0 10px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:#1A1713;outline:none;width:100%" />
+                  <input value="{{ customGroup }}" onChange="{{ onCustomGroup }}" placeholder="부위" style="height:40px;border:1px solid #E9E4DB;border-radius:11px;background:#FAF8F5;padding:0 10px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:#1A1713;outline:none;width:100%" />
+                  <input value="{{ customBase }}" onChange="{{ onCustomBase }}" inputMode="decimal" placeholder="시작 kg" style="height:40px;border:1px solid #E9E4DB;border-radius:11px;background:#FAF8F5;padding:0 10px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#1A1713;outline:none;width:100%" />
+                </div>
+                <div onClick="{{ addCustomEx }}" style="margin-top:8px;height:42px;border-radius:12px;background:#FF5A2E;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:600;cursor:pointer">종목 추가</div>
+                <div style="margin-top:8px;font-size:11px;color:#A39C91;line-height:1.6">부위·시작 무게는 비워도 됩니다. 추가하면 오늘 세션에 바로 들어가요.</div>
+              </div>
+            </sc-if>
           </div>
         </div>
       </sc-if>
@@ -816,6 +830,7 @@ class Component extends DCLogic {
       logDate: new Date().toISOString(),
       session: this.d.today.ex,
       units: {}, wDraft: {},
+      customEx: {}, customForm: { name: '', group: '', base: '' },
       restEndAt: 0, restOn: false, startedAt: null, finishedAt: null,
       report: null, aiLoading: false, aiError: null,
       chat: [], chatInput: '', chatLoading: false, finished: false
@@ -1003,7 +1018,7 @@ class Component extends DCLogic {
       const s = Object.assign({ v: 2, progIdx: this.state.progIdx, session: this.state.session, bump: this.state.bump,
         startedAt: this.state.startedAt, finishedAt: this.state.finishedAt, finished: this.state.finished, saved: this.state.saved, apiKey: this.state.apiKey,
         body: this.state.body, cardio: this.state.cardio, gh: this.state.gh, ghLast: this.state.ghLast,
-        units: this.state.units }, patch || {});
+        units: this.state.units, customEx: this.state.customEx }, patch || {});
       localStorage.setItem('liftlog.v1', JSON.stringify(s));
     } catch (e) {}
   }
@@ -1029,6 +1044,7 @@ class Component extends DCLogic {
         if (p.gh && typeof p.gh === 'object') next.gh = Object.assign({ token: '', repo: 'wlals1/liftlog-data', path: 'liftlog.json', branch: '', baseCommit: '', baseTree: '' }, p.gh);
         if (typeof p.ghLast === 'string') next.ghLast = p.ghLast;
         if (p.units && typeof p.units === 'object') next.units = p.units;
+        if (p.customEx && typeof p.customEx === 'object') next.customEx = p.customEx;
         if (Object.keys(next).length) this.setState(next, () => { if ((this.state.gh.token || '').trim()) this.ghSync(true); });
         else if ((this.state.gh.token || '').trim()) this.ghSync(true);
       }
@@ -1095,7 +1111,7 @@ class Component extends DCLogic {
   }
   toggle(ei, si, done, key) {
     this.mutate(ei, si, t => Object.assign({}, t, { done: !t.done }));
-    const e = this.EX[key];
+    const e = this.exOf(key);
     if (!done) this.setState(s => ({ restOn: true, restEndAt: Date.now() + (((e && e.rest) || this.props.restSeconds || 90) * 1000),
       startedAt: s.startedAt || Date.now() }));
   }
@@ -1105,7 +1121,7 @@ class Component extends DCLogic {
   addWarm(ei) {
     this.setState(s => ({ editRow: ei + '-0', session: s.session.map((x, i) => {
       if (i !== ei) return x;
-      const e = this.EX[x.key] || { st: 2.5, base: 0 }, top = x.sets[0] || { w: 0, r: 10 };
+      const e = this.exOf(x.key) || { st: 2.5, base: 0 }, top = x.sets.find(t => !t.warm) || x.sets[0] || { w: 0, r: 10 };
       const w = top.w ? this.snap(top.w * 0.5, e) : 0;
       return Object.assign({}, x, { sets: [{ w: w, r: Math.min(15, (top.r || 10) + 3), done: false, warm: true }].concat(x.sets) });
     }) }));
@@ -1113,7 +1129,7 @@ class Component extends DCLogic {
   addDrop(ei) {
     this.setState(s => {
       const x = s.session[ei], newIdx = x.sets.length;
-      const e = this.EX[x.key] || { st: 2.5, base: 0 }, last = x.sets[x.sets.length - 1] || { w: 0, r: 10 };
+      const e = this.exOf(x.key) || { st: 2.5, base: 0 }, last = x.sets[x.sets.length - 1] || { w: 0, r: 10 };
       const w = last.w ? this.snap(last.w * 0.75, e) : 0;
       const nx = Object.assign({}, x, { sets: x.sets.concat([{ w: w, r: last.r || 10, done: false, drop: true }]) });
       return { editRow: ei + '-' + newIdx, session: s.session.map((y, i) => i === ei ? nx : y) };
@@ -1139,7 +1155,7 @@ class Component extends DCLogic {
     Object.keys(a.saved || {}).forEach(k => { saved[k] = a.saved[k]; });
     Object.keys(b.saved || {}).forEach(k => { const x = saved[k], y = b.saved[k]; saved[k] = !x || (y.nsets || 0) >= (x.nsets || 0) ? y : x; });
     const uniq = (x, y) => { const m = {}; [].concat(x || [], y || []).forEach(i => { if (i && i.d) m[i.d] = i; }); return Object.keys(m).sort().map(k => m[k]); };
-    return { saved: saved, body: uniq(a.body, b.body), cardio: uniq(a.cardio, b.cardio) };
+    return { saved: saved, body: uniq(a.body, b.body), cardio: uniq(a.cardio, b.cardio), customEx: Object.assign({}, a.customEx, b.customEx) };
   }
   // Fetch-and-cache the base commit/tree ONCE (first sync ever on this device), then keep
   // reusing that same SHA as the parent of every future commit. Every ghSync() call therefore
@@ -1179,7 +1195,7 @@ class Component extends DCLogic {
       if (getRes.ok) { try { remote = JSON.parse(this.b64dec((await getRes.json()).content)); } catch (e) { remote = null; } }
       else if (getRes.status !== 404) throw new Error('읽기 ' + getRes.status + (getRes.status === 401 ? ' · 토큰 확인' : ''));
 
-      const local = { saved: this.state.saved, body: this.state.body, cardio: this.state.cardio };
+      const local = { saved: this.state.saved, body: this.state.body, cardio: this.state.cardio, customEx: this.state.customEx };
       const merged = remote ? this.mergeData(remote, local) : local;
       const payload = JSON.stringify(Object.assign({ v: 2, updated: new Date().toISOString() }, merged), null, 1);
       const jh = Object.assign({ 'content-type': 'application/json' }, this.ghHeaders());
@@ -1210,7 +1226,7 @@ class Component extends DCLogic {
       if (!refPatch.ok) throw new Error('ref 업데이트 ' + refPatch.status + (refPatch.status === 404 ? ' · 브랜치 확인' : refPatch.status === 403 ? ' · 토큰 쓰기 권한 확인' : ''));
 
       const t = new Date().toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-      this.setState({ saved: merged.saved, body: merged.body, cardio: merged.cardio, ghBusy: false, ghLast: t, ghStatus: '동기화 완료 · ' + t }, () => this.store());
+      this.setState({ saved: merged.saved, body: merged.body, cardio: merged.cardio, customEx: merged.customEx || this.state.customEx, ghBusy: false, ghLast: t, ghStatus: '동기화 완료 · ' + t }, () => this.store());
     } catch (e) {
       this.setState({ ghBusy: false, ghStatus: '실패: ' + (e.message || '네트워크 오류') });
     }
@@ -1288,11 +1304,19 @@ class Component extends DCLogic {
     }
     return null;
   }
+  // 웜업 세트는 맨 앞에 끼워 넣으므로(addWarm), sets[0]을 그대로 쓰면 웜업 무게를
+  // "지난 기록"으로 잘못 불러온다. 워킹셋(웜업·드랍 아님) 중 첫 세트를 기준으로 삼는다.
+  topSet(ex) {
+    return ex.sets.find(t => !t.warm && !t.drop) || ex.sets[0];
+  }
+  exOf(k) {
+    return this.EX[k] || (this.state.customEx || {})[k];
+  }
   makeEx(k, ns, bump) {
-    const e = this.EX[k], last = this.lastFor(k);
-    const prevW = last ? last.ex.sets[0].w : e.base;
-    const w0 = prevW === 0 ? 0 : this.snap(prevW + (bump && last ? e.st : 0), e);
-    const r0 = last ? last.ex.sets[0].r : e.rep;
+    const e = this.exOf(k), last = this.lastFor(k), lastTop = last ? this.topSet(last.ex) : null;
+    const prevW = lastTop ? lastTop.w : e.base;
+    const w0 = prevW === 0 ? 0 : this.snap(prevW + (bump && lastTop ? e.st : 0), e);
+    const r0 = lastTop ? lastTop.r : e.rep;
     const sets = [];
     for (let i = 0; i < ns; i++) sets.push({ w: w0, r: Math.max(3, r0 - (i >= 2 ? 1 : 0) - (i >= 3 ? 1 : 0)), done: false });
     return { key: k, name: e.n, group: e.g, mult: e.mult || 1, sets: sets };
@@ -1307,6 +1331,23 @@ class Component extends DCLogic {
   }
   removeExercise(ei) {
     this.setState(s => ({ session: s.session.filter((x, i) => i !== ei) }));
+  }
+  moveExercise(ei, dir) {
+    const j = ei + dir;
+    this.setState(s => {
+      if (j < 0 || j >= s.session.length) return {};
+      const arr = s.session.slice(); const t = arr[ei]; arr[ei] = arr[j]; arr[j] = t;
+      return { session: arr, editRow: null };
+    }, () => this.store());
+  }
+  setCustomForm(k, v) { this.setState(s => ({ customForm: Object.assign({}, s.customForm, { [k]: v }) })); }
+  addCustomEx() {
+    const f = this.state.customForm, name = (f.name || '').trim();
+    if (!name) return;
+    const key = 'custom_' + Date.now();
+    const ex = { n: name, g: (f.group || '').trim() || '기타', base: parseFloat(f.base) || 0, gain: 0, st: 2.5, rep: 10, range: '8~12', rest: 90 };
+    this.setState(s => ({ customEx: Object.assign({}, s.customEx, { [key]: ex }), customForm: { name: '', group: '', base: '' } }),
+      () => { this.store(); this.addExercise(key); });
   }
   context() {
     const S = this.state, now = new Date(), entries = this.entries(), last = S.session;
@@ -1389,12 +1430,13 @@ class Component extends DCLogic {
     S.session.forEach((x, i) => x.sets.forEach((t, j) => { if (firstOpen < 0 && !t.done) firstOpen = i * 100 + j; }));
     const LB = 2.2046226218488;
     const prevOf = (k, unit) => { const l = this.lastFor(k); if (!l) return '없음 · 프로그램 무게로 시작';
-      const w0 = l.ex.sets[0].w, wtxt = !w0 ? '맨몸' : unit === 'lb' ? Math.round(w0 * LB) + 'lb' : w0 + 'kg';
-      return this.md(l.date) + ' · ' + wtxt + ' × ' + l.ex.sets.map(t => t.r).join(','); };
+      const work = l.ex.sets.filter(t => !t.warm && !t.drop), top = this.topSet(l.ex);
+      const w0 = top.w, wtxt = !w0 ? '맨몸' : unit === 'lb' ? Math.round(w0 * LB) + 'lb' : w0 + 'kg';
+      return this.md(l.date) + ' · ' + wtxt + ' × ' + (work.length ? work : l.ex.sets).map(t => t.r).join(','); };
     const plateOn = this.props.plateHelper ?? true;
     const session = S.session.map((x, ei) => {
       const activeSet = x.sets.findIndex((t, j) => ei * 100 + j === firstOpen);
-      const e = this.EX[x.key] || {}, aw = activeSet >= 0 ? x.sets[activeSet].w : 0;
+      const e = this.exOf(x.key) || {}, aw = activeSet >= 0 ? x.sets[activeSet].w : 0;
       const unit = (S.units && S.units[x.key] === 'lb') ? 'lb' : 'kg';
       const step = unit === 'lb' ? +(5 / LB).toFixed(4) : (e.st || 2.5);
       const prec = unit === 'lb' ? 3 : 2;
@@ -1409,6 +1451,10 @@ class Component extends DCLogic {
         addWarm: () => this.addWarm(ei),
         addDrop: () => this.addDrop(ei),
         remove: () => this.removeExercise(ei),
+        moveUp: () => this.moveExercise(ei, -1),
+        moveDown: () => this.moveExercise(ei, 1),
+        upStyle: { width: 22, height: 22, borderRadius: 7, background: '#F4F1EA', color: ei > 0 ? '#8E887E' : '#DED7CB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, cursor: 'pointer' },
+        downStyle: { width: 22, height: 22, borderRadius: 7, background: '#F4F1EA', color: ei < S.session.length - 1 ? '#8E887E' : '#DED7CB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, cursor: 'pointer' },
         sets: (() => { let n = 0; return x.sets; })().map((t, si) => {
           const active = ei * 100 + si === firstOpen;
           const editing = S.editRow === ei + '-' + si;
@@ -1472,9 +1518,9 @@ class Component extends DCLogic {
             mark: on ? '✓' : '', style: { display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: '1px solid ' + (on ? A : '#EDE8DF'), borderRadius: 14, padding: '13px 14px', cursor: 'pointer' },
             markStyle: { width: 24, height: 24, flexShrink: 0, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: on ? '#fff' : '#DED7CB', background: on ? A : '#F4F1EA' } };
         })
-      : Object.keys(this.EX).filter(k => inSession.indexOf(k) < 0).map(k => {
-          const e = this.EX[k], last = this.lastFor(k);
-          return { name: e.n, tag: e.g, sub: last ? this.md(last.date) + ' · ' + last.ex.sets[0].w + 'kg × ' + last.ex.sets.map(t => t.r).join(',') : '기록 없음', go: () => this.addExercise(k),
+      : Object.keys(this.EX).concat(Object.keys(S.customEx || {})).filter(k => inSession.indexOf(k) < 0).map(k => {
+          const e = this.exOf(k), last = this.lastFor(k), top = last ? this.topSet(last.ex) : null;
+          return { name: e.n, tag: e.g, sub: top ? this.md(last.date) + ' · ' + top.w + 'kg × ' + top.r : '기록 없음', go: () => this.addExercise(k),
             mark: '+', style: { display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: '1px solid #EDE8DF', borderRadius: 14, padding: '12px 14px', cursor: 'pointer' },
             markStyle: { width: 24, height: 24, flexShrink: 0, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, color: A, background: '#FFF1EC' } };
         });
@@ -1583,10 +1629,14 @@ class Component extends DCLogic {
       openExercise: () => this.setState({ sheet: 'exercise' }),
       closeSheet: () => this.setState({ sheet: null }),
       stop: e => e.stopPropagation(),
-      sheetOpen: !!S.sheet, isProgramSheet: S.sheet === 'program', sheetRows: sheetRows,
+      sheetOpen: !!S.sheet, isProgramSheet: S.sheet === 'program', isExerciseSheet: S.sheet === 'exercise', sheetRows: sheetRows,
       openDate: () => this.setState({ sheet: 'date' }),
       sheetTitle: S.sheet === 'program' ? '오늘 프로그램' : S.sheet === 'date' ? '날짜 선택' : '종목 추가',
-      sheetNote: S.sheet === 'program' ? '고르면 지난 기록을 불러와 세트가 채워집니다. 종목은 아래에서 더하거나 ✕로 뺄 수 있어요.' : S.sheet === 'date' ? '지난 날짜를 고르면 그 날 기록을 불러와 수정하거나, 없으면 새로 입력할 수 있습니다.' : '지난 기록이 있으면 그 무게로 3세트가 들어갑니다.',
+      sheetNote: S.sheet === 'program' ? '고르면 지난 기록을 불러와 세트가 채워집니다. 종목은 아래에서 더하거나 ✕로 뺄 수 있어요.' : S.sheet === 'date' ? '지난 날짜를 고르면 그 날 기록을 불러와 수정하거나, 없으면 새로 입력할 수 있습니다.' : '지난 기록이 있으면 그 무게로 3세트가 들어갑니다. 목록에 없으면 아래에서 직접 추가할 수 있어요.',
+      customName: S.customForm.name, onCustomName: e => this.setCustomForm('name', e.target.value),
+      customGroup: S.customForm.group, onCustomGroup: e => this.setCustomForm('group', e.target.value),
+      customBase: S.customForm.base, onCustomBase: e => this.setCustomForm('base', e.target.value),
+      addCustomEx: () => this.addCustomEx(),
       toggleBump: () => this.setState(s => ({ bump: !s.bump })),
       bumpNote: S.bump ? '지난 무게 + 한 단계로 채웁니다' : '지난 무게 그대로 채웁니다',
       bumpStyle: { width: 42, height: 25, flexShrink: 0, borderRadius: 999, background: S.bump ? A : '#DED7CB', display: 'flex', alignItems: 'center', padding: 3, justifyContent: S.bump ? 'flex-end' : 'flex-start', transition: 'all .18s' },

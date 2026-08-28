@@ -16,7 +16,13 @@
       "Bash(node *)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8791/index.html)",
       "Bash(taskkill //F //IM node.exe)",
-      "Bash(taskkill //F //FI \"WINDOWTITLE eq http.server*\")"
+      "Bash(taskkill //F //FI \"WINDOWTITLE eq http.server*\")",
+      "Bash(git rev-list *)",
+      "Bash(gh --version)",
+      "Bash(gh api *)",
+      "Bash(gh run *)",
+      "Bash(timeout 3 python3 -m http.server 8000)",
+      "PowerShell(Get-Command *)"
     ]
   }
 }
