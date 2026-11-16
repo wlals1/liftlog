@@ -89,6 +89,9 @@
                 <div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:1px 10px;font-size:11.5px;color:#A39C91">
                   <span>지난 기록 · {{ ex.prev }}</span>
                   <span style="color:#B4642E">{{ ex.target }}</span>
+                  <sc-if value="{{ ex.hint }}" hint-placeholder-val="{{ false }}">
+                    <span style="color:#6B655C">{{ ex.hint }}</span>
+                  </sc-if>
                 </div>
                 <div style="margin-top:11px;display:grid;grid-template-columns:24px 1fr 46px 50px 52px;gap:8px;align-items:center;padding:0 4px 5px;border-bottom:1.5px solid #1A1713;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.12em;color:#A39C91">
                   <span>SET</span>
@@ -102,6 +105,9 @@
                     <span onClick="{{ s.tapNo }}" style="{{ s.noStyle }}">{{ s.no }}</span>
                     <div style="display:flex;align-items:center;gap:7px;min-width:0">
                       <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;letter-spacing:-.4px">{{ s.w }}</span>
+                      <sc-if value="{{ s.badge }}" hint-placeholder-val="{{ false }}">
+                        <span style="flex-shrink:0;white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;letter-spacing:.06em;color:#fff;background:#C2410C;border-radius:4px;padding:2px 5px">{{ s.badge }}</span>
+                      </sc-if>
                       <sc-if value="{{ s.active }}" hint-placeholder-val="{{ false }}">
                         <div style="display:flex;gap:4px">
                           <div onClick="{{ s.dec }}" style="width:26px;height:26px;border-radius:8px;border:1px solid #F0C6B4;background:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;color:#FF5A2E;cursor:pointer">−</div>
@@ -161,7 +167,10 @@
               </div>
             </sc-for>
 
-            <div onClick="{{ openExercise }}" style="height:44px;border:1px dashed #E0A88F;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;font-weight:600;color:#FF5A2E;background:#FFF6F2;cursor:pointer">종목 추가</div>
+            <div style="display:flex;gap:8px">
+            <div onClick="{{ openExercise }}" style="flex:1;height:44px;border:1px dashed #E0A88F;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;font-weight:600;color:#FF5A2E;background:#FFF6F2;cursor:pointer">종목 추가</div>
+            <button type="button" onClick="{{ saveAsProg }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;flex:1;height:44px;border:1px dashed #C8C1B4;border-radius:14px;background:#fff;color:#4A453D;font-size:12.5px;font-weight:600;white-space:nowrap">{{ saveAsProgLabel }}</button>
+            </div>
 
             <div style="background:#1A1713;border-radius:16px;padding:16px;color:#F5F2EC">
               <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.16em;color:#8E887E">SESSION</div>
@@ -180,6 +189,9 @@
                 </div>
               </div>
               <div style="margin-top:14px;padding-top:12px;border-top:1px solid #33302A;font-size:11.5px;color:#C9C4BA;line-height:1.6">{{ sCompare }}</div>
+              <sc-if value="{{ sPr }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:6px;font-size:11.5px;font-weight:600;color:#FFB59E">{{ sPr }}</div>
+              </sc-if>
               <sc-if value="{{ savedNote }}" hint-placeholder-val="{{ false }}">
                 <div style="margin-top:8px;display:flex;align-items:center;gap:7px">
                   <div style="width:6px;height:6px;border-radius:4px;background:#FF5A2E"></div>
@@ -469,6 +481,7 @@
                           <polyline points="{{ l.pts }}" fill="none" stroke="{{ l.color }}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline>
                           <circle cx="{{ l.endX }}" cy="{{ l.endY }}" r="3" fill="{{ l.color }}"></circle>
                         </svg>
+                        <div style="margin-top:2px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#6B655C">{{ l.e1 }}</div>
                       </div>
                     </sc-for>
                   </div>
@@ -696,9 +709,16 @@
             <div style="width:36px;height:4px;border-radius:3px;background:#DED7CB;margin:0 auto 14px"></div>
             <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
               <span style="font-size:16px;font-weight:600;letter-spacing:-.3px">{{ sheetTitle }}</span>
-              <span onClick="{{ closeSheet }}" style="font-size:12px;color:#8E887E;cursor:pointer">닫기</span>
+              <span onClick="{{ closeSheet }}" style="font-size:12px;color:#8E887E;cursor:pointer">{{ sheetCloseLabel }}</span>
             </div>
             <div style="margin-top:4px;font-size:11.5px;color:#8E887E;line-height:1.6;text-wrap:pretty">{{ sheetNote }}</div>
+            <sc-if value="{{ isExerciseSheet }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:10px;display:flex;gap:5px;overflow:auto">
+                <sc-for list="{{ pickChips }}" as="c" hint-placeholder-count="6">
+                  <button type="button" onClick="{{ c.go }}" style="{{ c.style }}">{{ c.label }}</button>
+                </sc-for>
+              </div>
+            </sc-if>
             <div style="margin-top:12px;display:flex;flex-direction:column;gap:7px">
               <sc-for list="{{ sheetRows }}" as="r" hint-placeholder-count="4">
                 <div onClick="{{ r.go }}" style="{{ r.style }}">
@@ -709,11 +729,67 @@
                     </div>
                     <div style="margin-top:3px;font-size:11.5px;color:#8E887E">{{ r.sub }}</div>
                   </div>
+                  <sc-if value="{{ r.edit }}" hint-placeholder-val="{{ false }}">
+                    <button type="button" onClick="{{ r.edit }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;flex-shrink:0;height:32px;padding:0 12px;border:1px solid #E0A88F;border-radius:9px;background:#FFF6F2;color:#B0471A;font-size:12px;font-weight:600;white-space:nowrap">편집</button>
+                  </sc-if>
                   <div style="{{ r.markStyle }}">{{ r.mark }}</div>
                 </div>
               </sc-for>
             </div>
+            <sc-if value="{{ isProgEdit }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <input aria-label="프로그램 이름" value="{{ peName }}" onChange="{{ onPeName }}" placeholder="프로그램 이름" style="flex:1;min-width:0;height:40px;border:1px solid #E9E4DB;border-radius:11px;background:#fff;padding:0 11px;font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:600;color:#1A1713;outline:none" />
+                  <button type="button" aria-label="프로그램 순서 앞으로" disabled="{{ peShiftUpOff }}" onClick="{{ peShiftUp }}" style="{{ peShiftUpStyle }}">◀</button>
+                  <span style="flex-shrink:0;min-width:26px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#6B655C">{{ pePos }}</span>
+                  <button type="button" aria-label="프로그램 순서 뒤로" disabled="{{ peShiftDownOff }}" onClick="{{ peShiftDown }}" style="{{ peShiftDownStyle }}">▶</button>
+                </div>
+                <sc-for list="{{ peRows }}" as="x" hint-placeholder-count="5">
+                  <div style="background:#fff;border:1px solid #EDE8DF;border-radius:14px;padding:9px 9px 9px 8px">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <div style="flex-shrink:0;display:flex;flex-direction:column;gap:4px">
+                        <button type="button" aria-label="위로 올리기" disabled="{{ x.upOff }}" onClick="{{ x.up }}" style="{{ x.upStyle }}">▲</button>
+                        <button type="button" aria-label="아래로 내리기" disabled="{{ x.downOff }}" onClick="{{ x.down }}" style="{{ x.downStyle }}">▼</button>
+                      </div>
+                      <button type="button" onClick="{{ x.toggle }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;flex:1;min-width:0;border:none;background:transparent;text-align:left;color:#1A1713">
+                        <span style="display:block;font-size:14px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.name }}</span>
+                        <span style="display:block;margin-top:3px;font-size:11px;font-weight:400;line-height:1.4;color:#6B655C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.sub }}</span>
+                      </button>
+                      <div style="flex-shrink:0;display:flex;align-items:center;gap:3px">
+                        <button type="button" aria-label="세트 줄이기" onClick="{{ x.dec }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;flex-shrink:0;width:30px;height:30px;border-radius:9px;border:1px solid #E9E4DB;background:#fff;color:#4A453D;font-size:14px;display:flex;align-items:center;justify-content:center">−</button>
+                        <span style="min-width:36px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600">{{ x.countLabel }}</span>
+                        <button type="button" aria-label="세트 늘리기" onClick="{{ x.inc }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;flex-shrink:0;width:30px;height:30px;border-radius:9px;border:1px solid #E9E4DB;background:#fff;color:#4A453D;font-size:14px;display:flex;align-items:center;justify-content:center">+</button>
+                      </div>
+                      <button type="button" aria-label="프로그램에서 빼기" onClick="{{ x.del }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;flex-shrink:0;width:30px;height:30px;border-radius:9px;border:1px solid #E9E4DB;background:#fff;color:#4A453D;font-size:14px;display:flex;align-items:center;justify-content:center;background:#F4F1EA;border-color:#F4F1EA;color:#6B655C;font-size:12px">✕</button>
+                    </div>
+                    <sc-if value="{{ x.open }}" hint-placeholder-val="{{ false }}">
+                      <div style="margin-top:10px;padding-top:10px;border-top:1px solid #F1EDE5;display:flex;flex-direction:column;gap:7px">
+                        <div style="display:flex;align-items:center;gap:6px">
+                          <span style="flex-shrink:0;font-size:11px;color:#6B655C">목표 횟수</span>
+                          <input aria-label="목표 횟수" value="{{ x.range }}" onChange="{{ x.onRange }}" placeholder="8~12" style="width:74px;height:34px;border:1px solid #E9E4DB;border-radius:9px;background:#FAF8F5;padding:0 9px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#1A1713;outline:none" />
+                          <span style="flex-shrink:0;margin-left:auto;font-size:11px;color:#6B655C">휴식</span>
+                          <button type="button" aria-label="휴식 15초 줄이기" onClick="{{ x.restDec }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;flex-shrink:0;width:30px;height:30px;border-radius:9px;border:1px solid #E9E4DB;background:#fff;color:#4A453D;font-size:14px;display:flex;align-items:center;justify-content:center">−</button>
+                          <span style="min-width:42px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600">{{ x.restLabel }}</span>
+                          <button type="button" aria-label="휴식 15초 늘리기" onClick="{{ x.restInc }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;flex-shrink:0;width:30px;height:30px;border-radius:9px;border:1px solid #E9E4DB;background:#fff;color:#4A453D;font-size:14px;display:flex;align-items:center;justify-content:center">+</button>
+                        </div>
+                        <input aria-label="종목 메모" value="{{ x.note }}" onChange="{{ x.onNote }}" placeholder="메모 · 기구 세팅 (예: 시트 4칸, 핀 3번)" style="height:36px;border:1px solid #E9E4DB;border-radius:9px;background:#FAF8F5;padding:0 10px;font-family:'IBM Plex Sans KR',sans-serif;font-size:12.5px;color:#1A1713;outline:none;width:100%" />
+                        <div style="font-size:10.5px;color:#6B655C;line-height:1.5">목표 횟수·휴식·메모는 이 종목이 들어간 모든 프로그램에 같이 적용됩니다.</div>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ peEmpty }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:14px 4px;font-size:12px;color:#6B655C;line-height:1.6">아직 종목이 없습니다. 아래에서 추가하세요.</div>
+                </sc-if>
+                <button type="button" onClick="{{ peAdd }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;height:44px;border:1px dashed #E0A88F;border-radius:14px;background:#FFF6F2;color:#B0471A;font-size:12.5px;font-weight:600">＋ 종목 추가</button>
+                <div style="display:flex;gap:6px">
+                  <button type="button" onClick="{{ peDelete }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;flex:1;height:44px;border:1px solid #EBC7C7;border-radius:13px;background:#fff;color:#B33B3B;font-size:12px;font-weight:600;white-space:nowrap">{{ peDeleteLabel }}</button>
+                  <button type="button" onClick="{{ peDone }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;flex:1;height:44px;border:none;border-radius:13px;background:#1A1713;color:#fff;font-size:13.5px;font-weight:600">완료</button>
+                </div>
+              </div>
+            </sc-if>
             <sc-if value="{{ isProgramSheet }}" hint-placeholder-val="{{ false }}">
+              <button type="button" onClick="{{ newProg }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;margin-top:8px;width:100%;height:44px;border:1px dashed #E0A88F;border-radius:14px;background:#FFF6F2;color:#B0471A;font-size:12.5px;font-weight:600">＋ 새 프로그램 만들기</button>
               <div onClick="{{ toggleBump }}" style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid #EDE8DF;border-radius:14px;padding:13px 14px;cursor:pointer">
                 <div>
                   <div style="font-size:13px;font-weight:600">지난 기록에서 자동 증량</div>
@@ -733,7 +809,7 @@
                   <input value="{{ customBase }}" onChange="{{ onCustomBase }}" inputMode="decimal" placeholder="시작 kg" style="height:40px;border:1px solid #E9E4DB;border-radius:11px;background:#FAF8F5;padding:0 10px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#1A1713;outline:none;width:100%" />
                 </div>
                 <div onClick="{{ addCustomEx }}" style="margin-top:8px;height:42px;border-radius:12px;background:#FF5A2E;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:600;cursor:pointer">종목 추가</div>
-                <div style="margin-top:8px;font-size:11px;color:#A39C91;line-height:1.6">부위·시작 무게는 비워도 됩니다. 추가하면 오늘 세션에 바로 들어가요.</div>
+                <div style="margin-top:8px;font-size:11px;color:#A39C91;line-height:1.6">{{ customHint }}</div>
               </div>
             </sc-if>
           </div>
@@ -741,11 +817,14 @@
       </sc-if>
 
       <sc-if value="{{ restOn }}" hint-placeholder-val="{{ false }}">
-        <div style="flex-shrink:0;margin:0 16px 8px;height:44px;border-radius:14px;background:#1A1713;color:#fff;display:flex;align-items:center;gap:10px;padding:0 14px">
+        <div style="flex-shrink:0;margin:0 16px 8px;height:44px;border-radius:14px;background:#1A1713;color:#fff;display:flex;align-items:center;gap:8px;padding:0 12px">
           <div style="width:7px;height:7px;border-radius:4px;background:#FF5A2E;animation:blink 1.1s infinite"></div>
           <span style="font-size:12px;color:#C9C4BA">휴식</span>
           <span style="flex:1;font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;letter-spacing:-.4px">{{ restLabel }}</span>
-          <span onClick="{{ skipRest }}" style="font-size:11.5px;color:#8E887E;cursor:pointer">건너뛰기</span>
+          <button type="button" aria-label="휴식 15초 줄이기" onClick="{{ restMinus }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;flex-shrink:0;height:28px;border-radius:8px;border:1px solid #4A453D;background:transparent;color:#C9C4BA;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;width:36px">−15</button>
+          <button type="button" aria-label="휴식 15초 늘리기" onClick="{{ restPlus }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;flex-shrink:0;height:28px;border-radius:8px;border:1px solid #4A453D;background:transparent;color:#C9C4BA;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;width:36px">+15</button>
+          <button type="button" onClick="{{ toggleBeep }}" style="appearance:none;-webkit-appearance:none;margin:0;padding:0;font-family:inherit;cursor:pointer;flex-shrink:0;height:28px;border-radius:8px;border:1px solid #4A453D;background:transparent;color:#C9C4BA;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:0 7px;font-family:inherit;white-space:nowrap">{{ beepLabel }}</button>
+          <span onClick="{{ skipRest }}" style="white-space:nowrap;font-size:11.5px;color:#8E887E;cursor:pointer">건너뛰기</span>
         </div>
       </sc-if>
 
@@ -831,6 +910,7 @@ class Component extends DCLogic {
       session: this.d.today.ex,
       units: {}, wDraft: {},
       customEx: {}, customForm: { name: '', group: '', base: '' },
+      programs: null, exOv: {}, progAt: 0, editProg: 0, exOpen: null, pickGroup: '전체', beep: true,
       restEndAt: 0, restOn: false, startedAt: null, finishedAt: null,
       report: null, aiLoading: false, aiError: null,
       chat: [], chatInput: '', chatLoading: false, finished: false
@@ -1015,10 +1095,11 @@ class Component extends DCLogic {
   // ── behaviour ─────────────────────────────────────────
   store(patch) {
     try {
-      const s = Object.assign({ v: 2, progIdx: this.state.progIdx, session: this.state.session, bump: this.state.bump,
+      const s = Object.assign({ v: 3, progIdx: this.state.progIdx, session: this.state.session, bump: this.state.bump,
         startedAt: this.state.startedAt, finishedAt: this.state.finishedAt, finished: this.state.finished, saved: this.state.saved, apiKey: this.state.apiKey,
         body: this.state.body, cardio: this.state.cardio, gh: this.state.gh, ghLast: this.state.ghLast,
-        units: this.state.units, customEx: this.state.customEx }, patch || {});
+        units: this.state.units, customEx: this.state.customEx,
+        programs: this.state.programs, exOv: this.state.exOv, progAt: this.state.progAt, beep: this.state.beep }, patch || {});
       localStorage.setItem('liftlog.v1', JSON.stringify(s));
     } catch (e) {}
   }
@@ -1029,7 +1110,10 @@ class Component extends DCLogic {
         const p = JSON.parse(raw) || {};
         const next = {};
         const stale = !((p.v || 1) >= 2) && !Object.keys(p.saved || {}).length;
-        if (typeof p.progIdx === 'number' && this.PROG[p.progIdx]) next.progIdx = p.progIdx;
+        // v3: 프로그램(종목·순서·세트 수)과 종목 설정을 앱 안에서 편집 — 없으면 코드 기본값(this.PROG)을 쓴다.
+        const lp = this.cleanProgs(p.programs);
+        if (lp) next.programs = lp;
+        if (typeof p.progIdx === 'number' && (lp || this.PROG)[p.progIdx]) next.progIdx = p.progIdx;
         if (!stale && Array.isArray(p.session) && p.session.length && p.session[0].sets) next.session = p.session;
         if (stale) { next.session = this.PROG[next.progIdx || 0].ex.map(([k, ns]) => this.makeEx(k, ns, false)); next.startedAt = null; next.finishedAt = null; }
         if (typeof p.bump === 'boolean') next.bump = p.bump;
@@ -1045,12 +1129,17 @@ class Component extends DCLogic {
         if (typeof p.ghLast === 'string') next.ghLast = p.ghLast;
         if (p.units && typeof p.units === 'object') next.units = p.units;
         if (p.customEx && typeof p.customEx === 'object') next.customEx = p.customEx;
+        if (p.exOv && typeof p.exOv === 'object') next.exOv = p.exOv;
+        if (typeof p.progAt === 'number') next.progAt = p.progAt;
+        if (typeof p.beep === 'boolean') next.beep = p.beep;
         if (Object.keys(next).length) this.setState(next, () => { if ((this.state.gh.token || '').trim()) this.ghSync(true); });
         else if ((this.state.gh.token || '').trim()) this.ghSync(true);
       }
     } catch (e) {}
     this.tick = 0;
     this.t = setInterval(() => {
+      if (this.state.restOn) { if (Date.now() >= this.state.restEndAt) this.restDone(true); else this.keepAwake(true); }
+      else if (this.wl) this.keepAwake(false);
       this.setState(s => {
         const n = {};
         if (s.restOn && Date.now() >= s.restEndAt) { n.restOn = false; n.restEndAt = 0; }
@@ -1062,7 +1151,7 @@ class Component extends DCLogic {
     this._onVis = () => { if (!document.hidden) this.setState(s => ({ restOn: s.restOn && Date.now() < s.restEndAt })); };
     document.addEventListener('visibilitychange', this._onVis);
   }
-  componentWillUnmount() { clearInterval(this.t); document.removeEventListener('visibilitychange', this._onVis); }
+  componentWillUnmount() { clearInterval(this.t); this.keepAwake(false); document.removeEventListener('visibilitychange', this._onVis); }
 
   async llm(system, messages, maxTokens) {
     if (window.claude && window.claude.complete) {
@@ -1112,6 +1201,7 @@ class Component extends DCLogic {
   toggle(ei, si, done, key) {
     this.mutate(ei, si, t => Object.assign({}, t, { done: !t.done }));
     const e = this.exOf(key);
+    if (!done) this.armAlert();
     if (!done) this.setState(s => ({ restOn: true, restEndAt: Date.now() + (((e && e.rest) || this.props.restSeconds || 90) * 1000),
       startedAt: s.startedAt || Date.now() }));
   }
@@ -1122,7 +1212,7 @@ class Component extends DCLogic {
     this.setState(s => ({ editRow: ei + '-0', session: s.session.map((x, i) => {
       if (i !== ei) return x;
       const e = this.exOf(x.key) || { st: 2.5, base: 0 }, top = x.sets.find(t => !t.warm) || x.sets[0] || { w: 0, r: 10 };
-      const w = top.w ? this.snap(top.w * 0.5, e) : 0;
+      const w = top.w ? Math.max(1, Math.round(top.w * 0.5)) : 0;
       return Object.assign({}, x, { sets: [{ w: w, r: Math.min(15, (top.r || 10) + 3), done: false, warm: true }].concat(x.sets) });
     }) }));
   }
@@ -1130,7 +1220,7 @@ class Component extends DCLogic {
     this.setState(s => {
       const x = s.session[ei], newIdx = x.sets.length;
       const e = this.exOf(x.key) || { st: 2.5, base: 0 }, last = x.sets[x.sets.length - 1] || { w: 0, r: 10 };
-      const w = last.w ? this.snap(last.w * 0.75, e) : 0;
+      const w = last.w ? Math.max(1, Math.round(last.w * 0.75)) : 0;
       const nx = Object.assign({}, x, { sets: x.sets.concat([{ w: w, r: last.r || 10, done: false, drop: true }]) });
       return { editRow: ei + '-' + newIdx, session: s.session.map((y, i) => i === ei ? nx : y) };
     });
@@ -1155,7 +1245,10 @@ class Component extends DCLogic {
     Object.keys(a.saved || {}).forEach(k => { saved[k] = a.saved[k]; });
     Object.keys(b.saved || {}).forEach(k => { const x = saved[k], y = b.saved[k]; saved[k] = !x || (y.nsets || 0) >= (x.nsets || 0) ? y : x; });
     const uniq = (x, y) => { const m = {}; [].concat(x || [], y || []).forEach(i => { if (i && i.d) m[i.d] = i; }); return Object.keys(m).sort().map(k => m[k]); };
-    return { saved: saved, body: uniq(a.body, b.body), cardio: uniq(a.cardio, b.cardio), customEx: Object.assign({}, a.customEx, b.customEx) };
+    // 프로그램·종목 설정은 통째로 last-writer-wins (progAt = 마지막으로 편집한 시각).
+    const pa = a.progAt || 0, pb = b.progAt || 0, nw = pb >= pa ? b : a, od = pb >= pa ? a : b;
+    return { saved: saved, body: uniq(a.body, b.body), cardio: uniq(a.cardio, b.cardio), customEx: Object.assign({}, a.customEx, b.customEx),
+      programs: nw.programs || od.programs || undefined, exOv: Object.assign({}, od.exOv, nw.exOv), progAt: Math.max(pa, pb) };
   }
   // Fetch-and-cache the base commit/tree ONCE (first sync ever on this device), then keep
   // reusing that same SHA as the parent of every future commit. Every ghSync() call therefore
@@ -1195,9 +1288,10 @@ class Component extends DCLogic {
       if (getRes.ok) { try { remote = JSON.parse(this.b64dec((await getRes.json()).content)); } catch (e) { remote = null; } }
       else if (getRes.status !== 404) throw new Error('읽기 ' + getRes.status + (getRes.status === 401 ? ' · 토큰 확인' : ''));
 
-      const local = { saved: this.state.saved, body: this.state.body, cardio: this.state.cardio, customEx: this.state.customEx };
+      const local = { saved: this.state.saved, body: this.state.body, cardio: this.state.cardio, customEx: this.state.customEx,
+        programs: this.state.programs || undefined, exOv: this.state.exOv, progAt: this.state.progAt || 0 };
       const merged = remote ? this.mergeData(remote, local) : local;
-      const payload = JSON.stringify(Object.assign({ v: 2, updated: new Date().toISOString() }, merged), null, 1);
+      const payload = JSON.stringify(Object.assign({ v: 3, updated: new Date().toISOString() }, merged), null, 1);
       const jh = Object.assign({ 'content-type': 'application/json' }, this.ghHeaders());
 
       const blobRes = await fetch(this.ghApi() + '/git/blobs', { method: 'POST', headers: jh,
@@ -1226,7 +1320,10 @@ class Component extends DCLogic {
       if (!refPatch.ok) throw new Error('ref 업데이트 ' + refPatch.status + (refPatch.status === 404 ? ' · 브랜치 확인' : refPatch.status === 403 ? ' · 토큰 쓰기 권한 확인' : ''));
 
       const t = new Date().toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-      this.setState({ saved: merged.saved, body: merged.body, cardio: merged.cardio, customEx: merged.customEx || this.state.customEx, ghBusy: false, ghLast: t, ghStatus: '동기화 완료 · ' + t }, () => this.store());
+      const mp = this.cleanProgs(merged.programs) || this.state.programs;
+      this.setState({ programs: mp, exOv: merged.exOv || this.state.exOv, progAt: merged.progAt || this.state.progAt || 0,
+        progIdx: Math.max(0, Math.min(this.state.progIdx, (mp || this.PROG).length - 1)),
+        saved: merged.saved, body: merged.body, cardio: merged.cardio, customEx: merged.customEx || this.state.customEx, ghBusy: false, ghLast: t, ghStatus: '동기화 완료 · ' + t }, () => this.store());
     } catch (e) {
       this.setState({ ghBusy: false, ghStatus: '실패: ' + (e.message || '네트워크 오류') });
     }
@@ -1234,15 +1331,15 @@ class Component extends DCLogic {
   loadDay(iso) {
     const dt = new Date(iso), md = this.md(dt), e = this.state.saved[md];
     if (e) {
-      const pi = this.PROG.findIndex(p => p.name === e.prog);
+      const pi = this.progs().findIndex(p => (p.id || p.name) === (e.progId || e.prog) || p.name === e.prog);
       this.setState({ logDate: iso, tab: 'today', sheet: null, finished: false, restOn: false, restEndAt: 0,
         progIdx: pi < 0 ? this.state.progIdx : pi, startedAt: Date.now() - (e.mins || 0) * 60000, finishedAt: null,
         session: (e.ex || []).map(x => ({ key: x.key, name: x.name, group: x.group, mult: x.mult || 1,
           sets: x.sets.map(t => ({ w: t.w, r: t.r, done: true, rir: t.rir, warm: t.warm, drop: t.drop })) })) }, () => this.store());
     } else {
-      const p = this.PROG[this.state.progIdx];
+      const p = this.progs()[this.state.progIdx] || this.progs()[0];
       this.setState({ logDate: iso, tab: 'today', sheet: null, finished: false, restOn: false, restEndAt: 0, startedAt: null, finishedAt: null,
-        session: p.ex.map(([k, ns]) => this.makeEx(k, ns, false)) }, () => this.store());
+        session: this.buildSession(p, false) }, () => this.store());
     }
   }
   setGh(k, v) {
@@ -1309,22 +1406,183 @@ class Component extends DCLogic {
   topSet(ex) {
     return ex.sets.find(t => !t.warm && !t.drop) || ex.sets[0];
   }
+  // 종목 정의 = 코드 사전(EX) 또는 직접 추가한 종목(customEx) + 앱에서 바꾼 설정(exOv: 목표 횟수·휴식·메모).
   exOf(k) {
-    return this.EX[k] || (this.state.customEx || {})[k];
+    const S = this.state || {};
+    const base = this.EX[k] || (S.customEx || {})[k], ov = (S.exOv || {})[k];
+    return base && ov ? Object.assign({}, base, ov) : base;
+  }
+  // '8~12' → { lo: 8, hi: 12 }, '편측 8' → { lo: 8, hi: 8 }
+  rangeOf(e) {
+    const a = (String((e && (e.range || e.rep)) || '').match(/\d+/g) || []).map(Number);
+    const lo = a.length ? a[0] : 8;
+    return { lo: lo, hi: a.length > 1 ? a[a.length - 1] : lo };
+  }
+  restTxt(s) { s = s || 90; return s < 120 ? s + '초' : s % 60 === 0 ? (s / 60) + '분' : Math.floor(s / 60) + '분 ' + (s % 60) + '초'; }
+  // 더블 프로그레션: 지난번 워킹셋이 전부 목표 횟수 상한을 채웠을 때만 증량할 차례로 본다.
+  hitTop(k, work) {
+    const hi = this.rangeOf(this.exOf(k)).hi;
+    return work.length > 0 && work[0].w > 0 && work.every(t => t.r >= hi);
   }
   makeEx(k, ns, bump) {
-    const e = this.exOf(k), last = this.lastFor(k), lastTop = last ? this.topSet(last.ex) : null;
-    const prevW = lastTop ? lastTop.w : e.base;
-    const w0 = prevW === 0 ? 0 : this.snap(prevW + (bump && lastTop ? e.st : 0), e);
-    const r0 = lastTop ? lastTop.r : e.rep;
+    const e = this.exOf(k), last = this.lastFor(k);
+    const work = last ? last.ex.sets.filter(t => !t.warm && !t.drop) : [];
+    const src = work.length ? work : (last ? [this.topSet(last.ex)] : []);
+    const up = !!bump && this.hitTop(k, work);
     const sets = [];
-    for (let i = 0; i < ns; i++) sets.push({ w: w0, r: Math.max(3, r0 - (i >= 2 ? 1 : 0) - (i >= 3 ? 1 : 0)), done: false });
+    for (let i = 0; i < ns; i++) {
+      // 지난번 같은 순번 세트의 무게·횟수를 그대로 가져온다 (증량 단위는 1kg 고정).
+      const p = src.length ? src[Math.min(i, src.length - 1)] : null;
+      const w = p ? (p.w ? +(p.w + (up ? 1 : 0)).toFixed(2) : 0) : (e.base || 0);
+      const r = p ? p.r : Math.max(3, e.rep - (i >= 2 ? 1 : 0) - (i >= 3 ? 1 : 0));
+      sets.push({ w: w, r: r, done: false });
+    }
     return { key: k, name: e.n, group: e.g, mult: e.mult || 1, sets: sets };
   }
+
+  // ── programs (앱 안에서 편집, localStorage + GitHub 동기화) ──
+  progs() { return (this.state && this.state.programs) || this.PROG; }
+  cleanProgs(list) {
+    if (!Array.isArray(list)) return null;
+    const out = list.filter(p => p && Array.isArray(p.ex)).map((p, i) => ({
+      id: String(p.id || p.name || ('p' + i)), name: String(p.name || ''), sub: String(p.sub || ''),
+      ex: p.ex.filter(x => Array.isArray(x) && typeof x[0] === 'string').map(x => [x[0], Math.max(1, Math.min(10, parseInt(x[1], 10) || 3))]) }));
+    return out.length ? out : null;
+  }
+  buildSession(p, bump) { return (p ? p.ex : []).filter(x => this.exOf(x[0])).map(x => this.makeEx(x[0], x[1], bump)); }
+  subOf(ex) {
+    const seen = [];
+    ex.forEach(x => { const e = this.exOf(x[0]); if (e && e.g && seen.indexOf(e.g) < 0) seen.push(e.g); });
+    return seen.slice(0, 4).join(' · ') || '종목 없음';
+  }
+  // fn은 프로그램 배열의 복사본을 직접 고치고, 같이 바꿀 state가 있으면 리턴한다.
+  editProgs(fn, cb) {
+    this._progTouched = true;
+    this.setState(s => {
+      const cur = (s.programs || this.PROG).map(p => ({ id: p.id || p.name, name: p.name, sub: p.sub, ex: p.ex.map(x => [x[0], x[1]]) }));
+      const extra = fn(cur, s) || {};
+      return Object.assign({ programs: cur, progAt: Date.now() }, extra);
+    }, () => { this.store(); if (cb) cb(); });
+  }
+  progRename(pi, name) { this.editProgs(c => { if (c[pi]) c[pi].name = name; }); }
+  progMoveEx(pi, i, dir) {
+    this._progDirty = true;
+    this.editProgs(c => { const a = c[pi] && c[pi].ex, j = i + dir; if (!a || j < 0 || j >= a.length) return; const t = a[i]; a[i] = a[j]; a[j] = t; return { exOpen: null }; });
+  }
+  progSetCount(pi, i, d) {
+    this._progDirty = true;
+    this.editProgs(c => { const x = c[pi] && c[pi].ex[i]; if (x) x[1] = Math.max(1, Math.min(10, x[1] + d)); });
+  }
+  progDelEx(pi, i) {
+    this._progDirty = true;
+    this.editProgs(c => { if (!c[pi]) return; c[pi].ex.splice(i, 1); c[pi].sub = this.subOf(c[pi].ex); return { exOpen: null }; });
+  }
+  progAddEx(pi, k) {
+    this._progDirty = true;
+    this.editProgs(c => { if (!c[pi]) return; c[pi].ex.push([k, 3]); c[pi].sub = this.subOf(c[pi].ex); return { sheet: 'progEdit' }; });
+  }
+  progShift(pi, dir) {
+    this.editProgs((c, s) => { const j = pi + dir; if (j < 0 || j >= c.length) return; const t = c[pi]; c[pi] = c[j]; c[j] = t;
+      return { editProg: j, progIdx: s.progIdx === pi ? j : s.progIdx === j ? pi : s.progIdx }; });
+  }
+  progNew() {
+    this._progDirty = false;
+    this.editProgs(c => { c.push({ id: 'p' + Date.now(), name: '새 프로그램', sub: '종목 없음', ex: [] });
+      return { sheet: 'progEdit', editProg: c.length - 1, exOpen: null, confirmDelProg: false }; });
+  }
+  progDelete(pi) {
+    if (this.progs().length <= 1) return;
+    if (!this.state.confirmDelProg) {
+      this.setState({ confirmDelProg: true });
+      clearTimeout(this._cd); this._cd = setTimeout(() => this.setState({ confirmDelProg: false }), 4000);
+      return;
+    }
+    clearTimeout(this._cd);
+    const S = this.state, wasCur = S.progIdx === pi, fresh = !S.finished && !S.session.some(x => x.sets.some(t => t.done));
+    this._progDirty = false;
+    this.editProgs((c, s) => { c.splice(pi, 1);
+      return { sheet: 'program', exOpen: null, confirmDelProg: false, progIdx: s.progIdx > pi ? s.progIdx - 1 : Math.min(s.progIdx, c.length - 1) }; },
+      () => { if (wasCur && fresh) this.setProgram(this.state.progIdx); });
+  }
+  // 편집을 끝낼 때: 지금 프로그램을 고쳤고 아직 한 세트도 체크하지 않았다면 오늘 세션을 새 구성으로 다시 채운다.
+  endProgEdit(next) {
+    const S = this.state, dirty = this._progDirty, touched = this._progTouched;
+    this._progDirty = false; this._progTouched = false;
+    const fresh = !S.finished && !S.session.some(x => x.sets.some(t => t.done));
+    const after = () => { this.store(); if (touched && (this.state.gh.token || '').trim()) this.ghSync(true); };
+    if (dirty && S.editProg === S.progIdx && fresh) {
+      this.setState({ sheet: next, exOpen: null, confirmDelProg: false, startedAt: null, finishedAt: null,
+        session: this.buildSession(this.progs()[S.progIdx], S.bump) }, after);
+    } else this.setState({ sheet: next, exOpen: null, confirmDelProg: false }, after);
+  }
+  // 오늘 세션의 종목·순서·세트 수를 지금 프로그램에 덮어쓴다 (웜업·드랍 세트는 세지 않음).
+  saveSessionAsProgram() {
+    if (!this.state.confirmSaveProg) {
+      this.setState({ confirmSaveProg: true, progSaved: false });
+      clearTimeout(this._cs); this._cs = setTimeout(() => this.setState({ confirmSaveProg: false }), 4000);
+      return;
+    }
+    clearTimeout(this._cs);
+    this.editProgs((c, s) => { const p = c[s.progIdx] || c[0];
+      p.ex = s.session.filter(x => this.exOf(x.key)).map(x => [x.key, Math.max(1, Math.min(10, x.sets.filter(t => !t.warm && !t.drop).length))]);
+      p.sub = this.subOf(p.ex);
+      return { confirmSaveProg: false, progSaved: true }; },
+      () => { this._cs = setTimeout(() => this.setState({ progSaved: false }), 2500); if ((this.state.gh.token || '').trim()) this.ghSync(true); });
+  }
+  setExOv(k, patch) {
+    this._progTouched = true;
+    this.setState(s => { const o = Object.assign({}, s.exOv); o[k] = Object.assign({}, o[k], patch); return { exOv: o, progAt: Date.now() }; }, () => this.store());
+  }
+
+  // ── rest timer helpers ──
+  // 세트 체크(사용자 탭) 안에서 오디오를 깨워 둬야 휴식이 끝날 때 타이머에서 소리를 낼 수 있다.
+  armAlert() {
+    if (this.state.beep !== false) {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) { this.ac = this.ac || new AC(); if (this.ac.state === 'suspended') this.ac.resume(); }
+      } catch (e) {}
+    }
+    this.keepAwake(true);
+  }
+  // 휴식 중에는 화면이 꺼지지 않게 잡아 둔다 (지원 안 하거나 거부되면 조용히 포기).
+  keepAwake(on) {
+    try {
+      if (on) {
+        if (this.wl || this._wlBusy || this._wlNo || !navigator.wakeLock || document.hidden) return;
+        this._wlBusy = true;
+        navigator.wakeLock.request('screen').then(l => {
+          this._wlBusy = false; this.wl = l;
+          l.addEventListener('release', () => { if (this.wl === l) this.wl = null; });
+          if (!this.state.restOn) this.keepAwake(false);
+        }, () => { this._wlBusy = false; this._wlNo = true; });
+      } else if (this.wl) { const l = this.wl; this.wl = null; l.release().catch(() => {}); }
+    } catch (e) { this._wlBusy = false; }
+  }
+  restDone(alert) {
+    this.keepAwake(false);
+    if (!alert || this.state.beep === false) return;
+    try { if (navigator.vibrate) navigator.vibrate([180, 90, 180]); } catch (e) {}
+    try {
+      const ac = this.ac;
+      if (!ac) return;
+      [0, 0.24].forEach(d => {
+        const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + d;
+        o.type = 'sine'; o.frequency.value = 880;
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.25, t0 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.17);
+        o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + 0.19);
+      });
+    } catch (e) {}
+  }
+  restAdd(sec) { this.setState(s => s.restOn ? { restEndAt: Math.max(Date.now() + 1000, s.restEndAt + sec * 1000) } : {}); }
+
   setProgram(pi) {
-    const p = this.PROG[pi];
+    const p = this.progs()[pi];
+    if (!p) return;
     this.setState({ progIdx: pi, sheet: null, restOn: false, restEndAt: 0, startedAt: null, finishedAt: null, finished: false,
-      session: p.ex.map(([k, ns]) => this.makeEx(k, ns, this.state.bump)) }, () => this.store());
+      session: this.buildSession(p, this.state.bump) }, () => this.store());
   }
   addExercise(k) {
     this.setState(s => ({ sheet: null, session: s.session.concat([this.makeEx(k, 3, s.bump)]) }));
@@ -1347,7 +1605,7 @@ class Component extends DCLogic {
     const key = 'custom_' + Date.now();
     const ex = { n: name, g: (f.group || '').trim() || '기타', base: parseFloat(f.base) || 0, gain: 0, st: 2.5, rep: 10, range: '8~12', rest: 90 };
     this.setState(s => ({ customEx: Object.assign({}, s.customEx, { [key]: ex }), customForm: { name: '', group: '', base: '' } }),
-      () => { this.store(); this.addExercise(key); });
+      () => { this.store(); if (this.state.sheet === 'progAdd') this.progAddEx(this.state.editProg, key); else this.addExercise(key); });
   }
   context() {
     const S = this.state, now = new Date(), entries = this.entries(), last = S.session;
@@ -1357,14 +1615,14 @@ class Component extends DCLogic {
     for (let i = 3; i >= 0; i--) { const l = entries.filter(e => this.weeksAgo(e.dt, now) === 11 - i); wkv.push((l.reduce((a, e) => a + (e.vol || 0), 0) / 1000).toFixed(1) + 't'); }
     const body = (S.body || []).slice(), cardio = (S.cardio || []).slice();
     const lines = [
-      '프로그램: 4분할(상체A/하체A/상체B/하체B, 머신·스미스·덤벨 중심). 양쪽 표기 종목은 한쪽 무게, 볼륨은 좌우 합산',
+      '프로그램: ' + this.progs().length + '분할(' + this.progs().map(p => p.name).join('/') + '). 양쪽 표기 종목은 한쪽 무게, 볼륨은 좌우 합산',
       '저장된 세션 수: ' + entries.length + '회' + (entries.length ? ' (' + this.md(entries[0].dt) + '~' + this.md(entries[entries.length - 1].dt) + ')' : ''),
       '최근 4주 주간 볼륨: ' + wkv.join(', '),
       Object.keys(gp).length ? '이번 주 부위별 세트: ' + Object.keys(gp).map(k => k + ' ' + gp[k]).join(', ') : '이번 주 기록 없음',
       entries.length ? '최근 세션: ' + entries.slice(-5).map(x => this.md(x.dt) + ' ' + x.prog + ' ' + (x.vol / 1000).toFixed(1) + 't/' + x.nsets + '세트 [' + (x.ex || []).map(e => e.name + ' ' + e.sets.map(t => (t.w || 0) + '×' + t.r + (t.rir != null ? 'R' + t.rir : '')).join('/')).join(', ') + ']').join(' | ') : '',
       body.length ? '체중/인바디: ' + body.slice(-6).map(b => this.md(new Date(b.d)) + ' ' + b.kg + 'kg' + (b.sm ? ' 골격근 ' + b.sm : '') + (b.fat ? ' 체지방률 ' + b.fat + '%' : '')).join(' | ') : '체중·인바디 기록 없음',
       cardio.length ? '유산소: ' + cardio.slice(-6).map(c => this.md(new Date(c.d)) + ' ' + c.type + ' ' + c.mins + '분' + (c.km ? ' ' + c.km + 'km' : '') + (c.hr ? ' ' + c.hr + 'bpm' : '')).join(' | ') : '유산소 기록 없음',
-      '오늘 ' + this.PROG[S.progIdx].name + ' 진행중, 완료 ' + last.reduce((a, x) => a + x.sets.filter(t => t.done).length, 0) + '/' + last.reduce((a, x) => a + x.sets.length, 0) + '세트',
+      '오늘 ' + (this.progs()[S.progIdx] || this.progs()[0]).name + ' 진행중, 완료 ' + last.reduce((a, x) => a + x.sets.filter(t => t.done).length, 0) + '/' + last.reduce((a, x) => a + x.sets.length, 0) + '세트',
       '오늘 세트: ' + last.map(x => x.name + ' ' + x.sets.map(t => (t.w || 0) + '×' + t.r).join('/')).join(' | ')
     ];
     return lines.filter(Boolean).join('\n');
@@ -1409,7 +1667,7 @@ class Component extends DCLogic {
   // ── render values ─────────────────────────────────────
   renderVals() {
     const S = this.state, d = this.d, A = '#FF5A2E';
-    const prog = this.PROG[S.progIdx];
+    const progs = this.progs(), prog = progs[S.progIdx] || progs[0];
     const tabDefs = [['today', '오늘', '세트별 기록'], ['cardio', '유산소', '직접 입력'], ['analysis', '분석', '일 · 주 · 월'], ['body', '몸', '체중 · 인바디'], ['ai', 'AI', '클로드 분석']];
     const tabs = tabDefs.map(([k, label]) => ({
       label: label, go: () => this.setState({ tab: k, sheet: null }),
@@ -1434,16 +1692,33 @@ class Component extends DCLogic {
       const w0 = top.w, wtxt = !w0 ? '맨몸' : unit === 'lb' ? Math.round(w0 * LB) + 'lb' : w0 + 'kg';
       return this.md(l.date) + ' · ' + wtxt + ' × ' + (work.length ? work : l.ex.sets).map(t => t.r).join(','); };
     const plateOn = this.props.plateHelper ?? true;
+    // 실시간 PR: 지금 기록 중인 날짜를 뺀 저장 기록에서 종목별 최고 무게 / 최고 추정 1RM(Epley).
+    const logMd0 = this.md(new Date(S.logDate)), histBest = {};
+    this.entries().forEach(en => { if (en.md === logMd0) return; (en.ex || []).forEach(x => (x.sets || []).forEach(t => {
+      if (t.warm || !t.w) return;
+      const b = histBest[x.key] || (histBest[x.key] = { w: 0, e1: 0 }), v = this.e1rm(t.w, t.r);
+      if (t.w > b.w) b.w = t.w;
+      if (v > b.e1) b.e1 = v; })); });
+    let prN = 0, e1N = 0;
     const session = S.session.map((x, ei) => {
       const activeSet = x.sets.findIndex((t, j) => ei * 100 + j === firstOpen);
       const e = this.exOf(x.key) || {}, aw = activeSet >= 0 ? x.sets[activeSet].w : 0;
       const unit = (S.units && S.units[x.key] === 'lb') ? 'lb' : 'kg';
-      const step = unit === 'lb' ? +(5 / LB).toFixed(4) : (e.st || 2.5);
+      const step = unit === 'lb' ? +(1 / LB).toFixed(4) : 1;
+      const hb = histBest[x.key];
+      let prIdx = -1, e1Idx = -1;
+      if (hb) { let bw = hb.w, be = hb.e1; x.sets.forEach((t, j) => { if (!t.done || t.warm || !t.w) return;
+        if (t.w > bw) { bw = t.w; prIdx = j; }
+        const v = this.e1rm(t.w, t.r); if (v > be + 0.05) { be = v; e1Idx = j; } }); }
+      if (prIdx >= 0) prN++; else if (e1Idx >= 0) e1N++;
+      if (e1Idx === prIdx) e1Idx = -1;
+      const lastK = this.lastFor(x.key), workK = lastK ? lastK.ex.sets.filter(t => !t.warm && !t.drop) : [], hiK = this.rangeOf(e).hi;
       const prec = unit === 'lb' ? 3 : 2;
       return {
         name: x.name, group: x.group, prev: prevOf(x.key, unit),
         unitLabel: unit.toUpperCase(), toggleUnit: () => this.toggleUnit(x.key),
-        target: '목표 ' + (e.range || e.rep) + '회 · 휴식 ' + (e.rest >= 120 ? (e.rest / 60) + '분' : (e.rest || 90) + '초') + (e.note ? ' · ' + e.note : ''),
+        target: '목표 ' + (e.range || e.rep) + '회 · 휴식 ' + this.restTxt(e.rest) + (e.note ? ' · ' + e.note : ''),
+        hint: !workK.length || !(workK[0].w > 0) ? null : workK.every(t => t.r >= hiK) ? '↑ 지난번 전 세트 ' + hiK + '회 달성 · 증량 차례' : '→ 전 세트 ' + hiK + '회 채우면 +1kg',
         doneLabel: x.sets.filter(t => t.done).length + '/' + x.sets.length,
         plate: unit === 'lb' ? null : plateOn && activeSet >= 0 && e.per === '양쪽' && aw ? '양쪽 ' + aw + 'kg · 총 ' + +(aw * 2).toFixed(1) + 'kg' : plateOn && activeSet >= 0 && e.per === '편측' ? '편측 ' + (aw ? aw + 'kg' : '맨몸') + ' · 좌우 각각 ' + x.sets[activeSet].r + '회' : null,
         volTxt: x.sets.every(t => !t.w) ? '맨몸' : this.vol((x.mult || 1) * x.sets.filter(t => t.done).reduce((a, t) => a + t.w * t.r, 0)),
@@ -1467,6 +1742,7 @@ class Component extends DCLogic {
           return {
             no: no, w: t.w ? (unit === 'lb' ? Math.round(t.w * LB) : t.w) : '—', r: t.r, active: active, editing: editing,
             wInput: wDraftVal !== undefined ? wDraftVal : String(wDisplay),
+            badge: si === prIdx ? 'PR' : si === e1Idx ? '1RM↑' : null,
             onWChange: e => this.setWDraft(ei, si, e.target.value),
             onWBlur: () => this.commitWDraft(ei, si, unit),
             onWKeyDown: e => { if (e.key === 'Enter') e.target.blur(); },
@@ -1490,14 +1766,36 @@ class Component extends DCLogic {
             }),
             toggle: () => this.toggle(ei, si, t.done, x.key),
             inc: () => { this.clearWDraft(ei, si); this.mutate(ei, si, u => Object.assign({}, u, { w: +(u.w + step).toFixed(prec) })); },
-            dec: () => { this.clearWDraft(ei, si); this.mutate(ei, si, u => Object.assign({}, u, { w: Math.max(step, +(u.w - step).toFixed(prec)) })); }
+            dec: () => { this.clearWDraft(ei, si); this.mutate(ei, si, u => Object.assign({}, u, { w: Math.max(0, +(u.w - step).toFixed(prec)) })); }
           };
         })
       };
     });
-    const lastSame = this.entries().reverse().find(x => x.prog === prog.name && x.md !== this.md(new Date()));
+    const lastSame = this.entries().reverse().find(x => ((x.progId || x.prog) === (prog.id || prog.name) || x.prog === prog.name) && x.md !== this.md(new Date()));
     const inSession = S.session.map(x => x.key);
     const logDt = new Date(S.logDate), logMd = this.md(logDt), isToday = this.md(new Date()) === logMd;
+    const ep = (S.sheet === 'progEdit' || S.sheet === 'progAdd') ? (progs[S.editProg] || null) : null;
+    const allKeys = Object.keys(this.EX).concat(Object.keys(S.customEx || {}));
+    const pickTaken = S.sheet === 'progAdd' && ep ? ep.ex.map(x => x[0]) : inSession;
+    const pickGo = k => { if (S.sheet === 'progAdd') this.progAddEx(S.editProg, k); else this.addExercise(k); };
+    const pickGroups = ['전체'];
+    allKeys.forEach(k => { const g = (this.exOf(k) || {}).g; if (g && pickGroups.indexOf(g) < 0) pickGroups.push(g); });
+    const pg = pickGroups.indexOf(S.pickGroup) < 0 ? '전체' : S.pickGroup;
+    const btnBase = { appearance: 'none', WebkitAppearance: 'none', margin: 0, padding: 0, fontFamily: 'inherit' };
+    const arrowBtn = (off, w, h) => Object.assign({}, btnBase, { flexShrink: 0, width: w || 34, height: h || 26, borderRadius: 8, border: '1px solid ' + (off ? '#F1EDE5' : '#E0A88F'), background: off ? '#FAF8F5' : '#FFF6F2', color: off ? '#C8C3BB' : '#B0471A', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: off ? 'default' : 'pointer' });
+    const peRows = ep ? ep.ex.map((x, i) => {
+      const k = x[0], e = this.exOf(k) || { n: '(없는 종목)', g: '기타', range: '', rest: 90 }, open = S.exOpen === i, pi = S.editProg, n = ep.ex.length;
+      return { name: e.n, sub: (e.g || '기타') + ' · ' + (e.range || e.rep || '–') + '회 · 휴식 ' + this.restTxt(e.rest) + (e.note ? ' · ' + e.note : ''),
+        countLabel: x[1] + '세트', open: open, toggle: () => this.setState({ exOpen: open ? null : i }),
+        up: () => this.progMoveEx(pi, i, -1), down: () => this.progMoveEx(pi, i, 1),
+        upOff: i === 0, downOff: i === n - 1, upStyle: arrowBtn(i === 0), downStyle: arrowBtn(i === n - 1),
+        inc: () => this.progSetCount(pi, i, 1), dec: () => this.progSetCount(pi, i, -1), del: () => this.progDelEx(pi, i),
+        range: e.range || '', onRange: ev => this.setExOv(k, { range: ev.target.value }),
+        restLabel: (e.rest || 90) + '초',
+        restDec: () => this.setExOv(k, { rest: Math.max(15, (e.rest || 90) - 15) }),
+        restInc: () => this.setExOv(k, { rest: Math.min(600, (e.rest || 90) + 15) }),
+        note: e.note || '', onNote: ev => this.setExOv(k, { note: ev.target.value }) };
+    }) : [];
     const sheetRows = S.sheet === 'date'
       ? (() => { const out = []; const t0 = new Date();
           for (let i = 0; i < 30; i++) {
@@ -1511,16 +1809,18 @@ class Component extends DCLogic {
           }
           return out; })()
       : S.sheet === 'program'
-      ? this.PROG.map((p, pi) => {
+      ? progs.map((p, pi) => {
           const nsets = p.ex.reduce((a, x) => a + x[1], 0);
           const on = pi === S.progIdx;
-          return { name: p.name, tag: p.ex.length + '종목', sub: p.sub + ' · ' + nsets + '세트', go: () => this.setProgram(pi),
+          return { name: p.name || '이름 없음', tag: p.ex.length + '종목', sub: (p.sub || '종목 없음') + ' · ' + nsets + '세트', go: () => this.setProgram(pi),
+            edit: ev => { ev.stopPropagation(); this._progDirty = false; this.setState({ sheet: 'progEdit', editProg: pi, exOpen: null, confirmDelProg: false }); },
             mark: on ? '✓' : '', style: { display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: '1px solid ' + (on ? A : '#EDE8DF'), borderRadius: 14, padding: '13px 14px', cursor: 'pointer' },
             markStyle: { width: 24, height: 24, flexShrink: 0, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: on ? '#fff' : '#DED7CB', background: on ? A : '#F4F1EA' } };
         })
-      : Object.keys(this.EX).concat(Object.keys(S.customEx || {})).filter(k => inSession.indexOf(k) < 0).map(k => {
+      : S.sheet === 'progEdit' ? []
+      : allKeys.filter(k => pickTaken.indexOf(k) < 0 && (pg === '전체' || (this.exOf(k) || {}).g === pg)).map(k => {
           const e = this.exOf(k), last = this.lastFor(k), top = last ? this.topSet(last.ex) : null;
-          return { name: e.n, tag: e.g, sub: top ? this.md(last.date) + ' · ' + top.w + 'kg × ' + top.r : '기록 없음', go: () => this.addExercise(k),
+          return { name: e.n, tag: e.g, sub: top ? this.md(last.date) + ' · ' + top.w + 'kg × ' + top.r : '기록 없음', go: () => pickGo(k),
             mark: '+', style: { display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: '1px solid #EDE8DF', borderRadius: 14, padding: '12px 14px', cursor: 'pointer' },
             markStyle: { width: 24, height: 24, flexShrink: 0, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, color: A, background: '#FFF1EC' } };
         });
@@ -1554,7 +1854,10 @@ class Component extends DCLogic {
     }));
     const selSaved = S.saved[this.md(sel.dt)];
     const dayS = selSaved ? { prog: selSaved.prog + (selSaved.sub ? ' · ' + selSaved.sub : ''), vol: this.vol(selSaved.vol), nsets: selSaved.nsets, mins: selSaved.mins } : null;
-    const dayExFinal = selSaved ? selSaved.ex.map(e => ({ name: e.name, pr: false,
+    const selDt = selSaved ? new Date(selSaved.date || 0) : null, bestBefore = {};
+    if (selDt) entries.forEach(en => { if (!(en.dt < selDt)) return; (en.ex || []).forEach(x => (x.sets || []).forEach(t => { if (!t.warm && t.w > (bestBefore[x.key] || 0)) bestBefore[x.key] = t.w; })); });
+    const dayExFinal = selSaved ? selSaved.ex.map(e => ({ name: e.name,
+      pr: !!bestBefore[e.key] && Math.max.apply(null, e.sets.filter(t => !t.warm).map(t => t.w || 0).concat([0])) > bestBefore[e.key],
       sets: e.sets.map(t => (t.warm ? 'W ' : '') + (t.w || '맨몸') + '×' + t.r + (t.rir != null ? ' R' + t.rir : '')).join('  ·  '),
       vol: e.sets.every(t => !t.w) ? '맨몸' : this.vol((e.mult || 1) * e.sets.reduce((a, t) => a + t.w * t.r, 0)) })) : [];
 
@@ -1567,14 +1870,20 @@ class Component extends DCLogic {
     }
     const mb = this.bars(moBuckets.map(m => m.vol || 0), 342, 62, 8);
     const seriesFor = k => entries.map(e => { const x = (e.ex || []).find(y => y.key === k && y.sets.length); return x ? Math.max.apply(null, x.sets.map(t => t.w)) : null; }).filter(v => v !== null);
-    const liftMeta = [['hack', '핵스쿼트', '#1A1713'], ['legpress', '레그프레스', '#8E887E'], ['smithinc', '스미스 인클라인', A]];
+    const e1For = k => entries.map(e => { const x = (e.ex || []).find(y => y.key === k && y.sets.length); if (!x) return null;
+      return Math.max.apply(null, x.sets.filter(t => !t.warm && t.w).map(t => this.e1rm(t.w, t.r)).concat([0])) || null; }).filter(v => v !== null);
+    const liftCnt = {}, liftName = {}, liftCols = ['#1A1713', A, '#8E887E', '#B4642E', '#6B655C'];
+    entries.forEach(e => (e.ex || []).forEach(x => { if (x.sets && x.sets.some(t => t.w)) { liftCnt[x.key] = (liftCnt[x.key] || 0) + 1; liftName[x.key] = x.name; } }));
+    const liftMeta = Object.keys(liftCnt).filter(k => liftCnt[k] >= 2).sort((a, b) => liftCnt[b] - liftCnt[a]).slice(0, 5)
+      .map((k, i) => [k, (this.exOf(k) || {}).n || liftName[k], liftCols[i % liftCols.length]]);
     const liftRows = liftMeta.map(([k, n, col]) => {
-      const vals = seriesFor(k);
+      const vals = seriesFor(k), ev = e1For(k);
       if (vals.length < 2) return null;
       const mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), pad = Math.max(1, (mx - mn) * 0.3);
       const p = this.pts(vals, 342, 34, 4, mn - pad, mx + pad), diff = +(vals[vals.length - 1] - vals[0]).toFixed(1);
       return { name: n, color: col, pts: this.str(p), endX: p[p.length - 1].x, endY: p[p.length - 1].y,
         from: vals[0] + 'kg', now: vals[vals.length - 1] + 'kg',
+        e1: ev.length > 1 ? '추정 1RM ' + ev[0].toFixed(1) + ' → ' + ev[ev.length - 1].toFixed(1) + 'kg' : '',
         delta: diff === 0 ? '변화 없음' : this.sign(diff, 'kg', diff % 1 ? 1 : 0),
         dStyle: { whiteSpace: 'nowrap', fontFamily: "'IBM Plex Mono',monospace", fontSize: 11.5, fontWeight: 600, color: diff === 0 ? '#A39C91' : A } };
     }).filter(Boolean);
@@ -1618,7 +1927,7 @@ class Component extends DCLogic {
       isToday: S.tab === 'today', isCardio: S.tab === 'cardio', isAnalysis: S.tab === 'analysis', isBody: S.tab === 'body', isAI: S.tab === 'ai',
       logDateLabel: (logDt.getMonth() + 1) + '월 ' + logDt.getDate() + '일 ' + this.DW[logDt.getDay()] + '요일' + (isToday ? '' : ' · 지난 기록'),
       headKicker: S.tab === 'today' ? (logDt.getMonth() + 1) + '월 ' + logDt.getDate() + '일 ' + this.DW[logDt.getDay()] + '요일' + (isToday ? '' : ' · 지난 기록 입력') : S.tab === 'cardio' ? 'CARDIO' : S.tab === 'analysis' ? 'ANALYSIS' : S.tab === 'body' ? 'BODY' : 'CLAUDE',
-      headTitle: S.tab === 'today' ? prog.name : S.tab === 'cardio' ? '유산소' : S.tab === 'analysis' ? '기록 분석' : S.tab === 'body' ? '체중 · 인바디' : 'AI 분석',
+      headTitle: S.tab === 'today' ? (prog.name || '이름 없음') : S.tab === 'cardio' ? '유산소' : S.tab === 'analysis' ? '기록 분석' : S.tab === 'body' ? '체중 · 인바디' : 'AI 분석',
       headMeta: S.tab === 'today' ? prog.sub : S.tab === 'cardio' ? '유산소 ' + cList.length + '건' : S.tab === 'analysis' ? '저장된 세션 ' + entries.length + '회' : S.tab === 'body' ? '측정 ' + bodyList.length + '회' : '내 기록 기반',
       progLabel: doneN + ' / ' + allN + ' 세트 완료',
       volLabel: this.vol(curVol) + ' · 예상 ' + this.vol(projected),
@@ -1626,38 +1935,63 @@ class Component extends DCLogic {
       session: session,
       sVol: this.vol(curVol), sSets: doneN + '/' + allN, sTime: this.mmss(this.liveElapsed()),
       openProgram: () => this.setState({ sheet: 'program' }),
-      openExercise: () => this.setState({ sheet: 'exercise' }),
-      closeSheet: () => this.setState({ sheet: null }),
+      openExercise: () => this.setState({ sheet: 'exercise', pickGroup: '전체' }),
+      closeSheet: () => { if (S.sheet === 'progAdd') this.setState({ sheet: 'progEdit' }); else if (S.sheet === 'progEdit') this.endProgEdit(null); else this.setState({ sheet: null }); },
+      sheetCloseLabel: S.sheet === 'progAdd' ? '뒤로' : '닫기',
+      isProgEdit: S.sheet === 'progEdit' && !!ep,
+      peName: ep ? ep.name : '', onPeName: e => this.progRename(S.editProg, e.target.value),
+      pePos: ep ? (S.editProg + 1) + '/' + progs.length : '',
+      peShiftUp: () => this.progShift(S.editProg, -1), peShiftDown: () => this.progShift(S.editProg, 1),
+      peShiftUpOff: S.editProg <= 0, peShiftDownOff: S.editProg >= progs.length - 1,
+      peShiftUpStyle: arrowBtn(S.editProg <= 0, 30, 40), peShiftDownStyle: arrowBtn(S.editProg >= progs.length - 1, 30, 40),
+      peRows: peRows, peEmpty: !!ep && ep.ex.length === 0,
+      peAdd: () => this.setState({ sheet: 'progAdd', pickGroup: '전체' }),
+      peDone: () => this.endProgEdit('program'),
+      peDelete: () => this.progDelete(S.editProg),
+      peDeleteLabel: progs.length <= 1 ? '마지막 프로그램은 삭제 불가' : S.confirmDelProg ? '한 번 더 누르면 삭제' : '프로그램 삭제',
+      newProg: () => this.progNew(),
+      saveAsProg: () => this.saveSessionAsProgram(),
+      saveAsProgLabel: S.progSaved ? '프로그램에 저장됨 ✓' : S.confirmSaveProg ? '한 번 더 누르면 덮어씀' : '이 구성을 프로그램에 저장',
+      pickChips: pickGroups.map(g => ({ label: g, go: () => this.setState({ pickGroup: g }),
+        style: Object.assign({}, btnBase, { flexShrink: 0, height: 30, padding: '0 11px', borderRadius: 999, whiteSpace: 'nowrap', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: pg === g ? '#1A1713' : '#fff', color: pg === g ? '#fff' : '#4A453D', border: '1px solid ' + (pg === g ? '#1A1713' : '#E9E4DB') }) })),
+      customHint: S.sheet === 'progAdd' ? '부위·시작 무게는 비워도 됩니다. 추가하면 이 프로그램에 바로 들어가요.' : '부위·시작 무게는 비워도 됩니다. 추가하면 오늘 세션에 바로 들어가요.',
+      sPr: prN || e1N ? [prN ? '무게 PR ' + prN + '종목' : '', e1N ? '추정 1RM 갱신 ' + e1N + '종목' : ''].filter(Boolean).join(' · ') : null,
+      restMinus: () => this.restAdd(-15), restPlus: () => this.restAdd(15),
+      toggleBeep: () => this.setState(s => ({ beep: s.beep === false }), () => this.store()),
+      beepLabel: S.beep === false ? '알림 끔' : '알림 켬',
       stop: e => e.stopPropagation(),
-      sheetOpen: !!S.sheet, isProgramSheet: S.sheet === 'program', isExerciseSheet: S.sheet === 'exercise', sheetRows: sheetRows,
+      sheetOpen: !!S.sheet, isProgramSheet: S.sheet === 'program', isExerciseSheet: S.sheet === 'exercise' || S.sheet === 'progAdd', sheetRows: sheetRows,
       openDate: () => this.setState({ sheet: 'date' }),
-      sheetTitle: S.sheet === 'program' ? '오늘 프로그램' : S.sheet === 'date' ? '날짜 선택' : '종목 추가',
-      sheetNote: S.sheet === 'program' ? '고르면 지난 기록을 불러와 세트가 채워집니다. 종목은 아래에서 더하거나 ✕로 뺄 수 있어요.' : S.sheet === 'date' ? '지난 날짜를 고르면 그 날 기록을 불러와 수정하거나, 없으면 새로 입력할 수 있습니다.' : '지난 기록이 있으면 그 무게로 3세트가 들어갑니다. 목록에 없으면 아래에서 직접 추가할 수 있어요.',
+      sheetTitle: S.sheet === 'program' ? '오늘 프로그램' : S.sheet === 'date' ? '날짜 선택' : S.sheet === 'progEdit' ? '프로그램 편집' : S.sheet === 'progAdd' ? '프로그램에 종목 추가' : '종목 추가',
+      sheetNote: S.sheet === 'program' ? '고르면 지난 기록을 불러와 세트가 채워집니다. 편집을 누르면 종목·순서·세트 수를 바꿔서 저장할 수 있어요.'
+        : S.sheet === 'progEdit' ? '▲▼로 순서, −/+로 세트 수를 바꿉니다. 종목 이름을 누르면 목표 횟수·휴식·메모를 고칠 수 있어요. 바꾸는 즉시 저장됩니다.'
+        : S.sheet === 'progAdd' ? '누르면 3세트로 들어갑니다. 목록에 없으면 맨 아래에서 직접 추가하세요.'
+        : S.sheet === 'date' ? '지난 날짜를 고르면 그 날 기록을 불러와 수정하거나, 없으면 새로 입력할 수 있습니다.' : '지난 기록이 있으면 그 무게로 3세트가 들어갑니다. 목록에 없으면 아래에서 직접 추가할 수 있어요.',
       customName: S.customForm.name, onCustomName: e => this.setCustomForm('name', e.target.value),
       customGroup: S.customForm.group, onCustomGroup: e => this.setCustomForm('group', e.target.value),
       customBase: S.customForm.base, onCustomBase: e => this.setCustomForm('base', e.target.value),
       addCustomEx: () => this.addCustomEx(),
       toggleBump: () => this.setState(s => ({ bump: !s.bump })),
-      bumpNote: S.bump ? '지난 무게 + 한 단계로 채웁니다' : '지난 무게 그대로 채웁니다',
+      bumpNote: S.bump ? '전 세트가 목표 횟수 상한을 채운 종목만 +1kg' : '지난 무게 그대로 채웁니다',
       bumpStyle: { width: 42, height: 25, flexShrink: 0, borderRadius: 999, background: S.bump ? A : '#DED7CB', display: 'flex', alignItems: 'center', padding: 3, justifyContent: S.bump ? 'flex-end' : 'flex-start', transition: 'all .18s' },
       knobStyle: { width: 19, height: 19, borderRadius: 999, background: '#fff' },
       sCompare: lastSame ? '지난 ' + prog.name + '(' + this.md(lastSame.dt) + ') ' + this.vol(lastSame.vol) + ' 대비 예상 ' + this.sign((projected - lastSame.vol) / lastSame.vol * 100, '%', 0) : entries.length ? '저장된 세션 ' + entries.length + '회 · 이 프로그램은 첫 기록이에요.' : '첫 기록입니다. 세트를 체크하고 아래 버튼을 누르면 여기에 쌓입니다.',
       savedNote: S.saved[logMd] ? logMd + ' 기록 저장됨 · ' + S.saved[logMd].at : null,
       finishLabel: S.finished ? (isToday ? '다음 프로그램 시작 →' : '오늘로 돌아가기 →') : S.saved[logMd] ? logMd + ' 기록 덮어쓰기' : doneN === allN ? '운동 완료 · 기록 저장' : '남은 ' + (allN - doneN) + '세트 건너뛰고 저장',
       finish: () => {
-        if (S.finished) { if (!isToday) { this.loadDay(new Date().toISOString()); return; } this.setProgram((S.progIdx + 1) % this.PROG.length); return; }
+        if (S.finished) { if (!isToday) { this.loadDay(new Date().toISOString()); return; } this.setProgram((S.progIdx + 1) % progs.length); return; }
         const md = logMd;
         const ex = S.session.map(x => ({ name: x.name, key: x.key, group: x.group, mult: x.mult || 1,
           sets: x.sets.filter(t => t.done).map(t => { const o = { w: t.w, r: t.r }; if (t.rir != null) o.rir = t.rir; if (t.warm) o.warm = true; if (t.drop) o.drop = true; return o; }) })).filter(x => x.sets.length);
         const vol = ex.reduce((a, x) => a + x.mult * x.sets.reduce((b, t) => b + t.w * t.r, 0), 0);
         const finishedAt = Date.now();
-        const entry = { date: logDt.toISOString(), prog: prog.name, sub: prog.sub, ex: ex, vol: vol,
+        const entry = { date: logDt.toISOString(), prog: prog.name, progId: prog.id || prog.name, sub: prog.sub, ex: ex, vol: vol,
           nsets: ex.reduce((a, x) => a + x.sets.length, 0), mins: Math.max(1, Math.round((S.startedAt ? (finishedAt - S.startedAt) / 1000 : 0) / 60)),
           at: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) };
         const saved = Object.assign({}, S.saved); saved[md] = entry;
         this.setState({ finished: true, finishedAt: finishedAt, restOn: false, saved: saved }, () => { this.store(); if ((this.state.gh.token || '').trim()) this.ghSync(true); });
       },
-      restOn: S.restOn, restLabel: this.mmss(Math.max(0, Math.ceil((S.restEndAt - Date.now()) / 1000))), skipRest: () => this.setState({ restOn: false, restEndAt: 0 }),
+      restOn: S.restOn, restLabel: this.mmss(Math.max(0, Math.ceil((S.restEndAt - Date.now()) / 1000))), skipRest: () => { this.restDone(false); this.setState({ restOn: false, restEndAt: 0 }); },
       ghOpen: S.ghOpen, ghBusy: S.ghBusy,
       ghToggle: () => this.setState(s => ({ ghOpen: !s.ghOpen })),
       ghHead: (S.gh.token || '').trim() ? '깃허브 동기화 켜짐' : '깃허브 동기화 설정',
@@ -1701,7 +2035,7 @@ class Component extends DCLogic {
       monthBars: mb.map((b, i) => Object.assign({}, b, { y: b.y + 20, fill: i === 5 ? A : '#E4DED2', vy: b.y + 14, vfill: i === 5 ? A : '#8E887E', v: b.v ? (b.v / 1000).toFixed(1) + 't' : '', t: moBuckets[i].m + '월' })),
       liftRows: liftRows, hasLifts: liftRows.length > 0,
       prs: prs.map(p => ({ date: this.md(p.dt), name: p.name, set: p.set })), hasPrs: prs.length > 0,
-      emptyMonth: '주요 종목이 2회 이상 기록되면 증량 추이가 그려집니다.',
+      emptyMonth: '같은 종목이 2회 이상 기록되면 자주 한 순서로 5개까지 증량 추이가 그려집니다.',
 
       hasBody: bodyList.length > 0, hasWChart: wp.length > 1, noWChart: wp.length < 2,
       noCardio: cList.length === 0, noWeek: wkList.length === 0, noLifts: liftRows.length === 0, noPrs: prs.length === 0,

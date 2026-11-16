@@ -15,10 +15,11 @@
 React 클래스 컴포넌트와 동일하되 `render()` 대신 `renderVals()` 가 템플릿 값을 리턴.
 
 ## 도메인 규칙
-- 종목 사전 `this.EX`, 프로그램 `this.PROG` (4분할: 상체A/하체A/상체B/하체B).
+- 종목 사전 `this.EX`, 프로그램 기본값 `this.PROG` (4분할). 앱에서 편집한 프로그램은 `state.programs`, 종목별 설정(목표 횟수·휴식·메모)은 `state.exOv` — 항상 `this.progs()` / `this.exOf(k)` 로 읽는다.
 - `per: '양쪽'` 종목은 입력 무게가 **한쪽 기준**, 볼륨은 `mult`(=2) 배.
 - `base: 0` 은 무게 미기록 종목 → '맨몸' 표시, 볼륨 제외.
-- 무게는 `snap(v, e)` 로 `base` 기준 `st` 배수에 맞춘다 (머신 스택 간격).
+- 무게 증감·자동 증량·웜업/드랍 계산은 전부 1kg 단위(lb 모드는 1lb). `snap()` / `st` 는 더 이상 쓰지 않는다.
+- 자동 증량은 더블 프로그레션: 지난번 워킹셋이 전부 목표 횟수 상한을 채웠을 때만 +1kg (`hitTop`, `makeEx`).
 - 주 단위 집계는 `weeksAgo(d, today)`, **월요일 시작**. 수정 시 주간 통계 전체 영향.
 - 데이터는 localStorage `liftlog.v1` + GitHub(`liftlog-data/liftlog.json`) 동기화.
 
